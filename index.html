@@ -10,87 +10,66 @@
    color: #e6edf3;
    margin: 0;
    padding: 0;
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   backdrop-filter: blur(4px);
+   text-align:center;
  }
- h1 { margin-top: 30px; }
- .panel { display: flex; gap: 20px; margin: 20px 0; font-size: 18px; }
+ h1 { margin-top: 25px; }
 
- .sets-container { display: flex; gap: 20px; margin-top: 20px; }
- .set-box {
-   background: rgba(255,255,255,0.07);
-   border: 1px solid rgba(255,255,255,0.18);
-   padding: 20px;
-   border-radius: 20px;
-   text-align: center;
-   min-width: 200px;
-   box-shadow: 0 0 15px rgba(0,0,0,0.3);
- }
- .glow-success {
-   box-shadow: 0 0 20px #2ecc71 !important;
-   transition: 0.4s ease;
- }
+ /* کارت هنگام برداشته شدن محو شود */
+ .card.fadeOut { opacity:0; transform: translateY(-10px); transition:0.4s ease; }
 
- .cards { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; max-width: 600px; justify-content:center; }
+ .cards { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:30px; }
  .card {
    background: rgba(255,255,255,0.12);
-   border: 1px solid rgba(255,255,255,0.18);
-   padding: 20px 30px;
-   border-radius: 40px;
-   cursor: grab;
-   font-size: 22px;
-   transition: 0.25s;
-   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-   backdrop-filter: blur(6px);
+   border:1px solid rgba(255,255,255,0.18);
+   padding:18px 28px;
+   font-size:22px;
+   border-radius:40px;
+   cursor:grab;
+   transition:0.25s;
+   box-shadow:0 4px 12px rgba(0,0,0,0.4);
  }
- .card:hover { transform: scale(1.09); }
+ .card:hover { transform:scale(1.1); }
 
- .fly { position: absolute; transition: 0.5s ease; pointer-events: none; font-size: 26px; }
+ .sets-container { display:flex; gap:18px; justify-content:center; margin-top:20px; }
+ .set-box {
+   background:rgba(255,255,255,0.07);
+   padding:20px;
+   border-radius:18px;
+   min-width:180px;
+   border:1px solid rgba(255,255,255,0.2);
+ }
+ .set-box.glow-success { box-shadow:0 0 20px #2ecc71; transition:0.4s; }
 
- .placed { margin-top: 10px; transition: 0.3s ease-out; }
+ #message { margin-top:25px; font-size:22px; min-height:28px; }
 
- @keyframes shake {
-   0%{transform:translateX(0);} 25%{transform:translateX(-6px);} 50%{transform:translateX(6px);} 75%{transform:translateX(-4px);} 100%{transform:translateX(0);} }
- .shake { animation: shake 0.35s; }
-
- @keyframes pulse {
-   0%{transform:scale(1);} 50%{transform:scale(1.3);} 100%{transform:scale(1);} }
- .pulse { animation: pulse 0.4s; }
-
- #message { margin-top: 25px; font-size: 24px; min-height: 28px; text-align:center; }
-
+ /* پنجره مرحله ۲ پایین صفحه */
  #nextStageBox {
-   position: fixed;
-   top: 50%; left: 50%; transform: translate(-50%,-50%);
-   background: rgba(255,255,255,0.1);
-   padding: 30px;
-   border-radius: 20px;
-   border: 1px solid rgba(255,255,255,0.2);
-   backdrop-filter: blur(8px);
-   text-align:center;
+   position:fixed;
+   bottom:0; left:0; right:0;
+   background:rgba(255,255,255,0.08);
+   padding:25px;
+   border-top:1px solid rgba(255,255,255,0.2);
+   backdrop-filter:blur(5px);
    display:none;
  }
- .choice-btn {
-   padding: 12px 25px;
-   margin: 10px;
-   border-radius: 15px;
-   background: rgba(255,255,255,0.12);
-   cursor:pointer;
-   font-size:18px;
-   border:1px solid rgba(255,255,255,0.25);
+ .choice-btn { padding:12px 25px; margin:5px; border-radius:12px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); cursor:pointer; }
+ .choice-btn:hover { background:rgba(255,255,255,0.25); }
+
+ /* پیام شروع مرحله بعد */
+ #startScreen {
+   position:fixed;
+   inset:0;
+   background:rgba(0,0,0,0.65);
+   display:none;
+   align-items:center;
+   justify-content:center;
+   font-size:60px;
+   backdrop-filter:blur(4px);
  }
- .choice-btn:hover { background: rgba(255,255,255,0.22); }
 </style>
 </head>
 <body>
-<h1>مرحله ۱ — آزمایش عضویت در مجموعه</h1>
-
-<div class="panel">
-  <div>امتیاز: <span id="score">0</span></div>
-  <div>خطاها: <span id="errors">0</span></div>
-</div>
+<h1>مرحله ۱ — آزمایش عضویت</h1>
 
 <div class="sets-container">
   <div class="set-box" data-set="A">A = { 1 , 3 , 5 }</div>
@@ -112,108 +91,69 @@
 <div id="message"></div>
 
 <div id="nextStageBox">
-  <h2>🎉 مرحله ۱ کامل شد!</h2>
-  <p>آماده‌ای برای مرحله ۲؟</p>
+  <h2>🎉 مرحله ۱ کامل شد! آماده‌ای؟</h2>
   <button class="choice-btn" onclick="goNext(true)">بله ✔</button>
   <button class="choice-btn" onclick="goNext(false)">خیر ✖</button>
 </div>
 
-<script>
-const sets = { A:[1,3,5], B:[3,4,5], C:[2,5,6] };
-let score=0, errors=0, totalPlaced=0;
+<div id="startScreen">بزن بریم! 🚀</div>
 
-const scoreEl=document.getElementById("score");
-const errorsEl=document.getElementById("errors");
-const message=document.getElementById("message");
+<script>
+const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
+let total=0;
 
 const cards=document.querySelectorAll('.card');
-cards.forEach(card=>{
-  card.addEventListener('dragstart',e=>{
+cards.forEach(c=>{
+  c.addEventListener('dragstart',e=>{
+    e.target.classList.add("fadeOut");
+    setTimeout(()=>e.target.style.visibility="hidden",300);
     e.dataTransfer.setData("value",e.target.dataset.value);
   });
 });
 
 const boxes=document.querySelectorAll('.set-box');
-boxes.forEach(box=>{
-  box.addEventListener('dragover',e=>e.preventDefault());
-  box.addEventListener('drop',e=>{
+boxes.forEach(b=>{
+  b.addEventListener('dragover',e=>e.preventDefault());
+  b.addEventListener('drop',e=>{
     e.preventDefault();
-    const value=parseInt(e.dataTransfer.getData("value"));
-    animateDrop(value,box);
+    dropToBox(parseInt(e.dataTransfer.getData("value")),b);
   });
 });
 
-function animateDrop(value,box){
-  const cardEl=document.querySelector(`.card[data-value='${value}']`);
-  if(!cardEl) return;
+function dropToBox(value,box){
+  const placed=document.createElement("div");
+  placed.textContent=value;
+  placed.className="card";
+  placed.style.marginTop="10px";
+  placed.style.opacity="0";
+  box.appendChild(placed);
+  setTimeout(()=>placed.style.opacity="1",50);
 
-  const rectStart=cardEl.getBoundingClientRect();
-  const temp=document.createElement("div");
-  temp.className="fly";
-  temp.textContent=value;
-  temp.style.left=rectStart.left+"px";
-  temp.style.top=rectStart.top+"px";
-  document.body.appendChild(temp);
-
-  const rectTarget=box.getBoundingClientRect();
-  temp.style.transform="scale(1.4)";
-
-  setTimeout(()=>{
-    temp.style.left=(rectTarget.left+rectTarget.width/2)+"px";
-    temp.style.top=(rectTarget.top+rectTarget.height+5)+"px";
-    temp.style.transform="scale(1)";
-  },50);
-
-  setTimeout(()=>{
-    temp.remove();
-    const real=document.createElement('div');
-    real.className='card placed';
-    real.textContent=value;
-    real.style.background='rgba(255,255,255,0.18)';
-    real.style.borderRadius='12px';
-    box.appendChild(real);
-    checkMembership(value,box);
-  },450);
+  check(value,box);
+  total++;
+  if(total===8) document.getElementById("nextStageBox").style.display="block";
 }
 
-function checkMembership(value,box){
-  const setName=box.dataset.set;
-
-  if(sets[setName].includes(value)){
-    score+=10;
-    scoreEl.textContent=score;
-    scoreEl.classList.add('pulse');
-    setTimeout(()=>scoreEl.classList.remove('pulse'),400);
-
-    message.textContent=`${setName} ∈ ${value} — عالی! عضو این مجموعه است ✨`;
+function check(value,box){
+  const s=box.dataset.set;
+  if(sets[s].includes(value)){
+    message.textContent=`${value} ∈ ${s} — عالی! عضو مجموعه است ✨`;
     box.classList.add('glow-success');
-    setTimeout(()=>box.classList.remove('glow-success'),400);
+    setTimeout(()=>box.classList.remove('glow-success'),500);
+  } else {
+    message.textContent=`${value} ∉ ${s} — عضو این مجموعه نیست ❌`;
   }
-  else{
-    errors++;
-    errorsEl.textContent=errors;
-    errorsEl.classList.add('shake');
-    setTimeout(()=>errorsEl.classList.remove('shake'),400);
-
-    message.textContent=`${setName} ∉ ${value} — این مقدار جزو این مجموعه نیست ❌`;
-  }
-
-  totalPlaced++;
-  if(totalPlaced===8){ showNextStage(); }
-}
-
-function showNextStage(){
-  document.getElementById("nextStageBox").style.display="block";
 }
 
 function goNext(yes){
-  if(yes){ alert("مرحله ۲ شروع شد ✔"); }
-  else{
-    const retry=confirm("می‌خوای دوباره امتحان کنی؟");
-    if(retry) location.reload();
+  if(yes){
+    document.getElementById("startScreen").style.display="flex";
+    setTimeout(()=>{ document.getElementById("startScreen").style.opacity="0"; },1200);
+  } else {
+    const again=confirm("میخوای دوباره امتحان کنی؟");
+    if(again) location.reload();
   }
 }
 </script>
-
 </body>
 </html>
