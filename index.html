@@ -1,337 +1,138 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fa">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>مجموعه‌ها در نبرد عناصر — نسخه وب</title>
+  <meta charset="UTF-8">
+  <title>مجموعه‌ها در نبرد عناصر - سطح آسان</title>
   <style>
-    :root{--bg:#0f172a;--card:#fff;--panel:#0b1220;--accent:#06b6d4}
-    html,body{height:100%;margin:0;font-family:Tahoma,Arial,sans-serif;background:linear-gradient(180deg,#071429 0%, #07121b 100%);color:#e6eef8}
-    .app{max-width:1000px;margin:18px auto;padding:18px}
-    header{display:flex;align-items:center;justify-content:space-between}
-    h1{font-size:20px;margin:0}
-    .controls{display:flex;gap:8px;align-items:center}
-    select,button{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:inherit}
-    .stage-area{margin-top:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:12px}
-    .top-row{display:flex;gap:12px;justify-content:space-between;align-items:flex-start}
-    .island{flex:1;min-height:150px;border-radius:12px;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));position:relative;display:flex;flex-direction:column;align-items:center}
-    .island h3{margin:6px 0;font-size:16px}
-    .dropzone{flex:1;width:100%;border-radius:10px;border:2px dashed rgba(255,255,255,0.04);display:flex;flex-wrap:wrap;gap:8px;padding:6px;align-content:flex-start;justify-content:center}
-    .card{width:64px;height:40px;background:var(--card);color:#000;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;cursor:grab;box-shadow:0 6px 18px rgba(0,0,0,0.45)}
-    .card.dragging{opacity:0.6;transform:scale(1.05)}
-    .bottom-row{margin-top:14px;display:flex;gap:12px}
-    .tray{flex:1;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px;min-height:120px}
-    .tray .cards{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-    .hud{margin-top:12px;display:flex;gap:12px;align-items:center}
-    .badge{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px}
-    .message{margin-left:auto;background:linear-gradient(90deg,var(--accent),#7c3aed);padding:8px 12px;border-radius:10px;color:#042b2f}
-    .venn{position:relative;height:150px}
-    .venn .left,.venn .right{position:absolute;top:20px;width:45%;height:110px;border-radius:50%;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center}
-    .venn .left{left:5%}
-    .venn .right{right:5%}
-    .venn .center{position:absolute;left:27%;top:30px;width:46%;height:90px;border-radius:50%;pointer-events:none}
-    .small{font-size:12px;color:#bcd}
-    footer{margin-top:14px;font-size:13px;color:#9fb}
-    @media(max-width:700px){.top-row{flex-direction:column}.island{min-height:120px}}
+    body {
+      font-family: 'Vazir', sans-serif;
+      direction: rtl;
+      background-color: #f4f4f4;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .sets-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+    }
+    .set {
+      border: 2px solid #333;
+      border-radius: 50%;
+      width: 160px;
+      height: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: white;
+    }
+    .set p {
+      margin: 4px 0;
+    }
+    .dropzone {
+      width: 100%;
+      height: 80px;
+      border: 2px dashed #aaa;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin: 5px;
+      cursor: grab;
+      display: inline-block;
+    }
+    #tray {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>مجموعه‌ها در نبرد عناصر — آزمایشگاه مجازی (پایه ۹)</h1>
-      <div class="controls">
-        <label class="small">مرحله:</label>
-        <select id="levelSelect">
-          <option value="easy">آسان — عضو مجموعه</option>
-          <option value="medium">متوسط — اجتماع / اشتراک</option>
-          <option value="hard">سخت — تفاضل</option>
-        </select>
-        <button id="resetBtn">بازنشانی مرحله</button>
-        <button id="showAnswer">نمایش پاسخ</button>
-      </div>
-    </header>
-
-    <section class="stage-area">
-      <div class="top-row" id="topRow">
-        <!-- islands injected here -->
-      </div>
-
-      <div class="hud">
-        <div class="badge">امتیاز: <span id="score">0</span></div>
-        <div class="badge">اشتباه: <span id="mistakes">0</span></div>
-        <div class="message" id="hint">با کشیدن کارت‌ها جزیره‌ها را نظم بده</div>
-      </div>
-
-      <div class="bottom-row">
-        <div class="tray">
-          <h4>کارت‌ها</h4>
-          <div class="cards" id="cardsTray"></div>
-        </div>
-        <div style="width:240px;">
-          <h4>راهنما</h4>
-          <div class="small" id="instructions"></div>
-          <div style="height:12px"></div>
-          <div class="small">پاداش‌ها: انتخاب درست = +10، اشتباه = -5</div>
-        </div>
-      </div>
-
-    </section>
-    <footer>طراحی شده برای آموزش مفاهیم مجموعه‌ها — اگر می‌خواهی نسخه React یا قابلیت ذخیره‌سازی ببینم، بگو.</footer>
+  <h1>مجموعه‌ها در نبرد عناصر - سطح آسان</h1>
+  <div class="sets-container">
+    <div class="set" data-set="A">
+      <p><strong>A = {1, 3, 5}</strong></p>
+      <div class="dropzone"></div>
+    </div>
+    <div class="set" data-set="B">
+      <p><strong>B = {3, 4, 5}</strong></p>
+      <div class="dropzone"></div>
+    </div>
+    <div class="set" data-set="C">
+      <p><strong>C = {2, 5, 6}</strong></p>
+      <div class="dropzone"></div>
+    </div>
   </div>
 
+  <div id="tray"></div>
+  <div id="message"></div>
+
   <script>
-    // داده‌های مراحل
-    const LEVELS = {
-      easy: {
-        title: 'جزیره‌ی اعداد گمشده',
-        islands: [
-          {id:'A',name:'زوج (A)',hint:'A = {2,4,6,8}'},
-          {id:'B',name:'فرد (B)',hint:'B = {1,3,5,7}'}
-        ],
-        cards: [1,2,3,4,5,6,7,8],
-        validator: (lvl,zoneId,card)=>{
-          const A = [2,4,6,8], B=[1,3,5,7];
-          if(zoneId==='A') return A.includes(card);
-          if(zoneId==='B') return B.includes(card);
-          return false;
-        }
-      },
-      medium: {
-        title: 'نبرد اشتراک‌ها',
-        islands: [
-          {id:'A',name:'آتش (A)',hint:''},
-          {id:'I',name:'اشتراک (A ∩ B)',hint:''},
-          {id:'B',name:'باد (B)',hint:''}
-        ],
-        cards: ['🔥','🌋','☀️','💨','🌪️','🌫️'],
-        validator: (lvl,zoneId,card)=>{
-          // A = {🔥,🌋,☀️,💨}  B = {💨,🌪️,🌫️,☀️}
-          const A = ['🔥','🌋','☀️','💨'];
-          const B = ['💨','🌪️','🌫️','☀️'];
-          if(zoneId==='I') return A.includes(card) && B.includes(card); // intersection
-          if(zoneId==='A') return A.includes(card) && !B.includes(card);
-          if(zoneId==='B') return B.includes(card) && !A.includes(card);
-          return false;
-        }
-      },
-      hard: {
-        title: 'تفاضل در سرزمین سایه‌ها',
-        islands: [
-          {id:'A',name:'سرزمین الف (A)'},
-          {id:'B',name:'سرزمین ب (B)'}
-        ],
-        cards: ['🐉','🐍','🦎','🐸','🦅','🦊'],
-        validator: (lvl,zoneId,card)=>{
-          const A=['🐉','🐍','🦎','🐸'];
-          const B=['🐍','🐸','🦅','🦊'];
-          if(zoneId==='A') return A.includes(card) && !B.includes(card);
-          if(zoneId==='B') return B.includes(card) && !A.includes(card);
-          return false;
-        }
-      }
+    const sets = {
+      A: [1, 3, 5],
+      B: [3, 4, 5],
+      C: [2, 5, 6]
     };
 
-    // state
-    let currentLevel='easy';
-    let score=0,mistakes=0;
+    const tray = document.getElementById('tray');
+    const message = document.getElementById('message');
+    const cards = [1, 3, 5, 4, 3, 2, 6];
 
-    const topRow = document.getElementById('topRow');
-    const cardsTray = document.getElementById('cardsTray');
-    const levelSelect = document.getElementById('levelSelect');
-    const resetBtn = document.getElementById('resetBtn');
-    const showAnswer = document.getElementById('showAnswer');
-    const scoreEl = document.getElementById('score');
-    const mistakesEl = document.getElementById('mistakes');
-    const hintEl = document.getElementById('hint');
-    const instructions = document.getElementById('instructions');
-
-    levelSelect.addEventListener('change',()=>{
-      currentLevel = levelSelect.value;
-      initLevel();
+    // ایجاد کارت‌ها در سینی پایین
+    cards.forEach(num => {
+      const card = document.createElement('div');
+      card.textContent = num;
+      card.className = 'card';
+      card.draggable = true;
+      card.dataset.value = num;
+      card.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', num);
+      });
+      tray.appendChild(card);
     });
-    resetBtn.addEventListener('click',initLevel);
-    showAnswer.addEventListener('click',()=>{revealAnswers()});
 
-    // drag & drop
-    let dragData = null;
-
-    function makeCardElement(content){
-      const d = document.createElement('div');
-      d.className='card';
-      d.draggable=true;
-      d.tabIndex=0;
-      d.textContent = content;
-      d.addEventListener('dragstart',e=>{
-        dragData=content;
-        d.classList.add('dragging');
-        e.dataTransfer.setData('text/plain',String(content));
-      });
-      d.addEventListener('dragend',()=>{dragData=null;d.classList.remove('dragging');});
-      return d;
-    }
-
-    function createDropZone(id,label){
-      const wrap = document.createElement('div');
-      wrap.className='island';
-      const title = document.createElement('h3');
-      title.textContent = label;
-      const dz = document.createElement('div');
-      dz.className='dropzone';
-      dz.dataset.zone = id;
-      dz.addEventListener('dragover',e=>{e.preventDefault();});
-      dz.addEventListener('drop',e=>{
+    // مناطق قابل رهاسازی (drop zones)
+    document.querySelectorAll('.dropzone').forEach(zone => {
+      zone.addEventListener('dragover', e => e.preventDefault());
+      zone.addEventListener('drop', e => {
         e.preventDefault();
-        const data = e.dataTransfer.getData('text/plain');
-        handleDrop(dz.dataset.zone,data,dz);
-      });
-      wrap.appendChild(title);
-      wrap.appendChild(dz);
-      return wrap;
-    }
+        const value = parseInt(e.dataTransfer.getData('text/plain'));
+        const setName = zone.parentElement.dataset.set;
+        const card = [...tray.children].find(c => parseInt(c.dataset.value) === value);
 
-    function shuffle(a){return a.slice().sort(()=>Math.random()-0.5)}
+        if (!card) return; // در صورت نبود کارت
 
-    function initLevel(){
-      const level = LEVELS[currentLevel];
-      topRow.innerHTML='';
-      cardsTray.innerHTML='';
-      score=0;mistakes=0;updateHUD();
-      hintEl.textContent = level.title;
-      instructions.innerHTML = getInstructionText(currentLevel);
-
-      // create islands/dropzones
-      if(currentLevel==='medium'){
-        // make 3 panes: A, Intersection, B visually as venn-like
-        const left = createDropZone('A','آتش (A)');
-        const center = createDropZone('I','اشتراک (A ∩ B)');
-        const right = createDropZone('B','باد (B)');
-        left.style.flex='0 0 32%'; right.style.flex='0 0 32%'; center.style.flex='0 0 32%';
-        topRow.appendChild(left);topRow.appendChild(center);topRow.appendChild(right);
-      } else {
-        LEVELS[currentLevel].islands.forEach(isle=>{
-          const el = createDropZone(isle.id,isle.name||isle.id);
-          topRow.appendChild(el);
-        });
-      }
-
-      // create cards
-      const items = shuffle(level.cards);
-      items.forEach(it=>{
-        const c = makeCardElement(it);
-        cardsTray.appendChild(c);
-      });
-
-    }
-
-    function handleDrop(zoneId,card,zoneEl){
-      // remove card from tray (find first matching)
-      const nodes = Array.from(cardsTray.querySelectorAll('.card'));
-      const node = nodes.find(n=>String(n.textContent)===String(card));
-      if(node){
-        // validate
-        const ok = LEVELS[currentLevel].validator(currentLevel,zoneId,card);
-        if(ok){
-          zoneEl.appendChild(node);
-          node.draggable=false;
-          node.style.cursor='default';
-          score+=10;updateHUD();
-          flash(zoneEl,true);
+        if (sets[setName].includes(value)) {
+          // درست است
+          zone.appendChild(card);
+          card.draggable = false;
+          card.style.cursor = 'default';
+          message.textContent = `درست! عدد ${value} عضو مجموعه ${setName} است.`;
         } else {
-          // wrong drop: shake and return
-          mistakes+=1;score-=5;updateHUD();
-          flash(zoneEl,false);
-          // visual bounce
-          node.animate([{transform:'translateY(0)'},{transform:'translateY(-12px)'},{transform:'translateY(0)'}],{duration:420})
+          // اشتباه است
+          message.textContent = `اشتباه! عدد ${value} عضو مجموعه ${setName} نیست.`;
+          tray.appendChild(card); // بازگشت به سینی
         }
-      }
-      checkCompletion();
-    }
-
-    function flash(el,ok){
-      const orig = el.style.boxShadow;
-      el.style.transition='box-shadow 220ms';
-      el.style.boxShadow = ok? '0 0 18px 4px rgba(6,182,212,0.14)' : '0 0 18px 4px rgba(255,32,32,0.12)';
-      setTimeout(()=>{el.style.boxShadow=orig},450);
-    }
-
-    function updateHUD(){scoreEl.textContent=score;mistakesEl.textContent=mistakes}
-
-    function checkCompletion(){
-      const remaining = cardsTray.querySelectorAll('.card').length;
-      if(remaining===0){
-        hintEl.textContent = 'مرحله تمام شد! امتیاز نهایی: '+score;
-        // show venn for medium or summary for hard
-        if(currentLevel==='medium') showVennSummary();
-        if(currentLevel==='hard') showDiffSummary();
-      }
-    }
-
-    function showVennSummary(){
-      const area = document.createElement('div');
-      area.className='venn';
-      area.innerHTML = '<div class="left"></div><div class="right"></div><div class="center"></div>';
-      const top = document.querySelector('.stage-area');
-      top.appendChild(area);
-      setTimeout(()=>{area.scrollIntoView({behavior:'smooth'})},200);
-    }
-
-    function showDiffSummary(){
-      const m = document.createElement('div');
-      m.style.marginTop='12px';
-      m.className='small';
-      m.textContent='مرور: اعضای منحصربه‌فرد برای هر مجموعه (A−B و B−A) نشان داده شده‌اند.';
-      document.querySelector('.stage-area').appendChild(m);
-    }
-
-    function revealAnswers(){
-      // move cards to the correct zones with a small delay
-      const level = LEVELS[currentLevel];
-      const allCards = Array.from(document.querySelectorAll('.card'));
-      allCards.forEach(c=>{c.remove();});
-      // rebuild tray but reveal sorted
-      const correctA = [];
-      const correctB = [];
-      const correctI = [];
-      level.cards.forEach(card=>{
-        // find zone foreach
-        const zones = (['A','B','I']);
-        let placed=false;
-        zones.forEach(z=>{
-          if(!placed && level.validator(currentLevel,z,card)){
-            if(z==='A') correctA.push(card);
-            if(z==='B') correctB.push(card);
-            if(z==='I') correctI.push(card);
-            placed=true;
-          }
-        });
       });
-      // place cards to zones
-      if(currentLevel==='medium'){
-        const a = document.querySelector('[data-zone="A"] .dropzone') || document.querySelector('[data-zone="A"]');
-        const i = document.querySelector('[data-zone="I"] .dropzone') || document.querySelector('[data-zone="I"]');
-        const b = document.querySelector('[data-zone="B"] .dropzone') || document.querySelector('[data-zone="B"]');
-        correctA.forEach(x=>{a.appendChild(makeCardElement(x));});
-        correctI.forEach(x=>{i.appendChild(makeCardElement(x));});
-        correctB.forEach(x=>{b.appendChild(makeCardElement(x));});
-      } else {
-        // A and B
-        const a = document.querySelector('[data-zone="A"] .dropzone') || document.querySelector('[data-zone="A"]');
-        const b = document.querySelector('[data-zone="B"] .dropzone') || document.querySelector('[data-zone="B"]');
-        correctA.forEach(x=>{a.appendChild(makeCardElement(x));});
-        correctB.forEach(x=>{b.appendChild(makeCardElement(x));});
-      }
-      hintEl.textContent = 'پاسخ‌ها نمایش داده شد. از بازنشانی برای تلاش دوباره استفاده کن.';
-    }
-
-    function getInstructionText(level){
-      if(level==='easy') return 'کارت‌ها اعداد ۱ تا ۸ هستند: اعداد زوج را به جزیرهٔ زوج (A) و اعداد فرد را به جزیرهٔ فرد (B) بکش.';
-      if(level==='medium') return 'کارت‌ها عناصر هستند: آن‌ها را به ناحیهٔ A-only، ناحیهٔ اشتراک (A ∩ B) یا ناحیهٔ B-only بکش.';
-      if(level==='hard') return 'کارت‌ها حیواناتند: فقط اعضای منحصربه‌فرد هر مجموعه را به جزیرهٔ مربوطه (A−B یا B−A) بکش.';
-      return '';
-    }
-
-    // initialize
-    initLevel();
+    });
   </script>
 </body>
 </html>
