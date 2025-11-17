@@ -1,235 +1,476 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8" />
-<title>مرحله ۱ - عضویت در مجموعه</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>مرحله ۱ — مجموعه‌ها در نبرد عناصر</title>
 <style>
- body {
-   font-family: "Vazirmatn", sans-serif;
-   background: linear-gradient(180deg,#0b0f14,#0e141b,#0b0f14);
-   color: #e6edf3;
-   margin: 0;
-   padding: 0;
-   text-align:center;
- }
- h1 { margin-top: 25px; }
+  :root{
+    --bg1:#0b0f14; --bg2:#0e141b; --card:#ffffff12; --accent:#4fd6ff;
+    --good:#2ecc71; --bad:#ff4b4b;
+  }
+  body{
+    margin:0; padding:22px; font-family: Vazirmatn, system-ui, sans-serif;
+    background: linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:#e6edf3; text-align:center;
+  }
+  h1{ margin:6px 0 12px; font-size:20px; }
 
- .cards { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:30px; }
- .card {
-   background: rgba(255,255,255,0.12);
-   border:1px solid rgba(255,255,255,0.18);
-   padding:18px 28px;
-   font-size:22px;
-   border-radius:40px;
-   cursor:grab;
-   transition:0.25s;
-   box-shadow:0 4px 12px rgba(0,0,0,0.4);
- }
- .card:hover { transform:scale(1.1); }
- .card.fadeOut { opacity:0; transform: translateY(-10px); transition:0.4s ease; }
- .placed { animation: dropIn 0.35s ease-out; cursor:grab; }
+  /* score */
+  #scoreBox{ font-size:18px; margin-bottom:12px; color:#9be7ff; display:inline-block; }
+  .score-change{ display:inline-block; margin-left:12px; padding:6px 10px; border-radius:10px; font-weight:700; opacity:0; transform:scale(.8); transition:all .28s ease; }
+  .score-change.show{ opacity:1; transform:scale(1); }
+  .score-change.plus{ background: rgba(46,204,113,0.95); color:#021; }
+  .score-change.minus{ background: rgba(231,76,60,0.95); color:#fff; }
 
- @keyframes dropIn {
-   0% { transform: scale(0.1) translateY(-20px); opacity:0; }
-   100% { transform: scale(1) translateY(0); opacity:1; }
- }
+  .sets-container{ display:flex; gap:18px; justify-content:center; margin:18px 0; flex-wrap:wrap; }
+  .set-box{
+    min-width:220px; padding:16px; border-radius:14px; border:2px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03); text-align:center; position:relative; overflow:hidden;
+  }
+  .set-title{ font-weight:700; margin-bottom:8px; }
 
- .sets-container { display:flex; gap:18px; justify-content:center; margin-top:20px; }
- .set-box {
-   background:rgba(255,255,255,0.07);
-   padding:20px;
-   border-radius:18px;
-   min-width:200px;
-   border:3px solid rgba(0,255,120,0.35);
-   position:relative;
-   text-align:center;
-   animation:borderPulse 3s infinite ease-in-out;
-   overflow:hidden;
- }
+  /* scanner vertical */
+  .set-box::after{
+    content:""; position:absolute; left:0; top:-120%; width:100%; height:60%;
+    background: linear-gradient(180deg, rgba(0,255,120,0) 0%, rgba(0,255,120,0.18) 50%, rgba(0,255,120,0) 100%);
+    animation: scan 2.6s linear infinite; pointer-events:none;
+  }
+  @keyframes scan{ 0%{top:-120%} 100%{top:160%} }
 
- @keyframes borderPulse {
-  0% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
-  50% { box-shadow:0 0 18px rgba(0,255,140,0.55); border-color:rgba(0,255,120,0.55); }
-  100% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
- }
+  /* cards tray */
+  .cards{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:18px 0; }
+  .card{
+    background: var(--card); padding:12px 18px; border-radius:32px; cursor:grab; user-select:none;
+    border:1px solid rgba(255,255,255,0.06); box-shadow:0 6px 18px rgba(0,0,0,0.45); font-size:20px; min-width:52px; text-align:center;
+    transition: transform .12s ease;
+  }
+  .card:active{ cursor:grabbing; }
+  .card.fadeOut{ opacity:0; transform:translateY(-8px); transition:all .22s ease; visibility:hidden; }
 
- /* Scanner */
- .set-box::after {
-   content: "";
-   position:absolute;
-   top:-100%; left:0;
-   width:100%; height:100%;
-   background: linear-gradient(rgba(0,255,100,0) 0%, rgba(0,255,100,0.25) 50%, rgba(0,255,100,0) 100%);
-   animation: scan 2.5s linear infinite;
- }
- @keyframes scan {
-   0% { top:-100%; }
-   100% { top:100%; }
- }
+  /* placed style */
+  .placed{ background: rgba(255,255,255,0.05); border-radius:10px; padding:8px 12px; display:inline-block; margin:6px 6px 0 0; cursor:grab; }
+  .placed-anim{ animation: dropIn .36s cubic-bezier(.2,.9,.2,1); }
+  @keyframes dropIn{ 0%{transform:translateY(-14px) scale(.85); opacity:0} 60%{transform:translateY(6px) scale(1.03); opacity:1} 100%{transform:none} }
 
- /* Green flash */
- .green-flash {
-   position:absolute;
-   top:0; left:0; right:0; bottom:0;
-   pointer-events:none;
-   border-radius:18px;
-   box-shadow:0 0 25px 8px rgba(0,255,140,0.8) inset;
-   animation: flash 0.45s ease-out;
-   opacity:0;
- }
- @keyframes flash {
-   0% { opacity:0; }
-   30% { opacity:1; }
-   100% { opacity:0; }
- }
+  /* green glow when placed */
+  @keyframes greenPulse { 0%{box-shadow:0 0 0 rgba(0,255,120,0)} 40%{box-shadow:0 0 22px rgba(0,255,120,0.9),0 0 34px rgba(0,255,120,0.45)} 100%{box-shadow:0 0 0 rgba(0,255,120,0)} }
+  .card-green-glow{ animation: greenPulse .7s ease-out; border-color: rgba(0,255,120,0.9) !important; }
 
- #message { margin-top:25px; font-size:26px; min-height:28px; }
- #scoreBox { margin-top:20px; font-size:26px; }
- .math-text { direction:ltr; unicode-bidi:embed; font-weight:bold; font-size:24px; color:#4fd6ff; }
+  /* shake */
+  @keyframes shake{0%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-6px)}100%{transform:none}}
+  .shake{ animation:shake .36s; }
 
- /* پایان مرحله */
- #overlay {
-   position:fixed;
-   top:0; left:0;
-   width:100%; height:100%;
-   background:rgba(0,0,0,0.7);
-   backdrop-filter: blur(5px);
-   display:none;
-   justify-content:center;
-   align-items:center;
-   z-index:9999;
- }
- #endBox {
-   background:#0f1724;
-   padding:40px 55px;
-   border-radius:22px;
-   box-shadow:0 0 25px rgba(0,255,120,0.45);
-   text-align:center;
-   animation: pop 0.35s ease;
- }
- @keyframes pop {
-   0% { transform:scale(0.3); opacity:0; }
-   100% { transform:scale(1); opacity:1; }
- }
- .btn {
-   margin-top:22px;
-   padding:14px 32px;
-   border-radius:14px;
-   font-size:20px;
-   cursor:pointer;
-   border:none;
-   margin-left:10px;
- }
- .yes { background:#00ff9a; }
- .no { background:#ff3b3b; }
+  #message{ margin-top:18px; min-height:56px; font-size:16px; line-height:1.35; }
+  .math-text{ direction:ltr; unicode-bidi:embed; display:block; font-weight:700; font-size:18px; color:var(--accent); margin-bottom:6px; }
+
+  /* big warning overlay (for errors like تکراری or not member) */
+  #bigWarn{
+    position:fixed; left:50%; top:46%; transform:translate(-50%,-50%); z-index:9998;
+    display:none; min-width:320px; background:rgba(10,10,10,0.9); padding:22px 28px; border-radius:12px;
+    border:3px solid rgba(255,80,80,0.07); color: #fff; font-size:20px; text-align:center;
+    box-shadow:0 12px 40px rgba(0,0,0,0.6);
+  }
+  #bigWarn .bigText{ font-size:22px; font-weight:800; margin-bottom:8px; color:var(--bad); }
+  #bigWarn.small{ padding:12px 18px; font-size:16px; }
+
+  /* end level overlay */
+  #overlay{
+    position:fixed; inset:0; display:none; z-index:9999;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    justify-content:center; align-items:center;
+  }
+  #endBox{
+    background:#071020; padding:28px 36px; border-radius:16px; text-align:center;
+    box-shadow:0 0 50px rgba(0,255,120,0.14);
+    color:#e6edf3; min-width:320px;
+  }
+  #endBox h2{ font-size:22px; margin:6px 0 10px; }
+  #endBox p{ color:#aee; margin:8px 0 12px; }
+
+  .btn{ padding:10px 18px; border-radius:12px; font-size:16px; cursor:pointer; border:none; margin:6px; }
+  .btn.yes{ background: #00e192; color:#022; }
+  .btn.no{ background: #ff6b6b; color:#fff; }
+
+  /* helpers */
+  .hidden{ display:none !important; }
 </style>
 </head>
 <body>
-<h1>مرحله ۱ — آزمایش عضویت</h1>
-<div id="scoreBox">امتیاز: ۰</div>
-
-<div class="sets-container">
-  <div class="set-box" data-set="A">A = { 1 , 3 , 5 }</div>
-  <div class="set-box" data-set="B">B = { 3 , 4 , 5 }</div>
-  <div class="set-box" data-set="C">C = { 2 , 5 , 6 }</div>
-</div>
-
-<div class="cards" id="cardArea">
-  <div class="card" draggable="true" data-value="1">۱</div>
-  <div class="card" draggable="true" data-value="2">۲</div>
-  <div class="card" draggable="true" data-value="3">۳</div>
-  <div class="card" draggable="true" data-value="3">۳</div>
-  <div class="card" draggable="true" data-value="4">۴</div>
-  <div class="card" draggable="true" data-value="5">۵</div>
-  <div class="card" draggable="true" data-value="5">۵</div>
-  <div class="card" draggable="true" data-value="۵">۵</div>
-  <div class="card" draggable="true" data-value="6">۶</div>
-</div>
-
-<div id="message"></div>
-
-<!-- پایان مرحله -->
-<div id="overlay">
-  <div id="endBox">
-    <h2>🎉 مرحله ۱ با موفقیت کامل شد!</h2>
-    <p>آماده‌ای برای مرحله ۲؟</p>
-    <button class="btn yes" onclick="nextLevel()">بزن بریم</button>
-    <button class="btn no" onclick="retry()">دوباره امتحان می‌کنم</button>
+  <h1>مرحله ۱ — آزمایش عضویت</h1>
+  <div id="scoreBox">امتیاز: <span id="scoreVal">0</span>
+    <span id="scoreChange" class="score-change"></span>
   </div>
-</div>
+
+  <div class="sets-container">
+    <div class="set-box" data-set="A">
+      <div class="set-title">A = { 1 , 3 , 5 }</div>
+      <div class="set-contents" data-contents="A"></div>
+    </div>
+
+    <div class="set-box" data-set="B">
+      <div class="set-title">B = { 3 , 4 , 5 }</div>
+      <div class="set-contents" data-contents="B"></div>
+    </div>
+
+    <div class="set-box" data-set="C">
+      <div class="set-title">C = { 2 , 5 , 6 }</div>
+      <div class="set-contents" data-contents="C"></div>
+    </div>
+  </div>
+
+  <div class="cards" id="tray">
+    <!-- initial tray: 9 cards as requested -->
+    <div class="card" draggable="true" id="tray-1" data-value="1">۱</div>
+    <div class="card" draggable="true" id="tray-2" data-value="2">۲</div>
+    <div class="card" draggable="true" id="tray-3" data-value="3">۳</div>
+    <div class="card" draggable="true" id="tray-4" data-value="3">۳</div>
+    <div class="card" draggable="true" id="tray-5" data-value="4">۴</div>
+    <div class="card" draggable="true" id="tray-6" data-value="5">۵</div>
+    <div class="card" draggable="true" id="tray-7" data-value="5">۵</div>
+    <div class="card" draggable="true" id="tray-8" data-value="5">۵</div>
+    <div class="card" draggable="true" id="tray-9" data-value="6">۶</div>
+  </div>
+
+  <div id="message"></div>
+  <div id="bigWarn"><div class="bigText" id="bigWarnTitle"></div><div id="bigWarnSub"></div></div>
+
+  <!-- end-level overlay -->
+  <div id="overlay">
+    <div id="endBox">
+      <h2 id="endTitle">🎉 مرحله ۱ با موفقیت کامل شد!</h2>
+      <p id="endText">آماده‌ای برای مرحله ۲؟</p>
+      <div>
+        <button class="btn yes" id="btnNext">بزن بریم</button>
+        <button class="btn no" id="btnRetry">دوباره امتحان می‌کنم</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
-let score=0;
-let placedCount=0;
+/* ---------- data ---------- */
+const sets = { A: [1,3,5], B: [3,4,5], C: [2,5,6] };
+let score = 0;
+const initialTrayCount = document.querySelectorAll('#tray .card').length;
 
-function updateScore(){ document.getElementById("scoreBox").textContent=`امتیاز: ${score}`; }
+/* elements */
+const scoreVal = document.getElementById('scoreVal');
+const scoreChange = document.getElementById('scoreChange');
+const tray = document.getElementById('tray');
+const boxes = document.querySelectorAll('.set-box');
+const messageEl = document.getElementById('message');
+const bigWarn = document.getElementById('bigWarn');
+const bigWarnTitle = document.getElementById('bigWarnTitle');
+const bigWarnSub = document.getElementById('bigWarnSub');
+const overlay = document.getElementById('overlay');
+const endTitle = document.getElementById('endTitle');
+const endText = document.getElementById('endText');
+const btnNext = document.getElementById('btnNext');
+const btnRetry = document.getElementById('btnRetry');
 
-function addGreenFlash(box){
-  const fx=document.createElement("div");
-  fx.className="green-flash";
-  box.appendChild(fx);
-  setTimeout(()=>fx.remove(),500);
+/* state */
+let placedCount = 0; // current number of placed cards across sets
+
+/* helpers */
+function updateScore(delta){
+  score += delta;
+  scoreVal.textContent = score;
+  scoreChange.textContent = (delta>0? '+'+delta : delta);
+  scoreChange.className = 'score-change ' + (delta>0? 'plus show' : 'minus show');
+  setTimeout(()=> scoreChange.className = 'score-change', 700);
 }
 
-const cards=document.querySelectorAll('.card');
-cards.forEach(c=>{
-  c.addEventListener('dragstart',e=>{
-    e.dataTransfer.setData("value",e.target.dataset.value);
-    e.dataTransfer.setData("origin","card");
-  });
-});
+function setMessage(mathLine, persian){
+  messageEl.innerHTML = `<span class="math-text" dir="ltr">${mathLine}</span><div style="margin-top:6px">${persian}</div>`;
+}
 
-const boxes=document.querySelectorAll('.set-box');
-boxes.forEach(box=>{
-  box.addEventListener('dragover',e=>e.preventDefault());
-  box.addEventListener('drop',e=>{
+/* big warning modal (for duplicate / wrong membership) */
+function showBigWarn(title, sub='', duration=2000, shakeTarget=null){
+  bigWarnTitle.textContent = title;
+  bigWarnSub.textContent = sub;
+  bigWarn.style.display = 'block';
+  if(shakeTarget) { shakeTarget.classList.add('shake'); setTimeout(()=> shakeTarget.classList.remove('shake'), 450); }
+  setTimeout(()=> bigWarn.style.display = 'none', duration);
+}
+
+/* create unique id */
+function uniqueId(prefix='id'){ return prefix + '-' + Date.now() + '-' + Math.floor(Math.random()*1000); }
+
+/* add green flash inside set box */
+function addGreenFlash(box){
+  const fx = document.createElement('div');
+  fx.style.position='absolute'; fx.style.inset='0';
+  fx.style.pointerEvents='none'; fx.style.borderRadius='12px';
+  fx.style.boxShadow='inset 0 0 26px 8px rgba(0,255,120,0.85)';
+  fx.style.opacity='0.98';
+  box.appendChild(fx);
+  setTimeout(()=> fx.style.opacity='0', 160);
+  setTimeout(()=> fx.remove(), 420);
+}
+
+/* make tray card draggable */
+function makeTrayCardDraggable(el){
+  el.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('value', el.dataset.value);
+    e.dataTransfer.setData('origin','tray');
+    e.dataTransfer.setData('dragId', el.id);
+    // hide visually but keep in DOM (we may remove later)
+    el.classList.add('fadeOut');
+    setTimeout(()=> el.style.visibility = 'hidden', 120);
+  });
+
+  // click to highlight (touch-friendly)
+  el.addEventListener('click', ()=> {
+    el.style.transform = 'scale(1.05)';
+    setTimeout(()=> el.style.transform = '', 160);
+  });
+}
+
+/* make placed card draggable & clickable to return */
+function makePlacedDraggable(placedEl){
+  placedEl.setAttribute('draggable','true');
+
+  placedEl.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('value', placedEl.dataset.value);
+    e.dataTransfer.setData('origin','placed');
+    e.dataTransfer.setData('dragId', placedEl.id);
+    // record original parent id for revert
+    const parentSet = placedEl.closest('.set-box')?.dataset?.set || '';
+    e.dataTransfer.setData('fromSet', parentSet);
+    // hide while dragging
+    placedEl.classList.add('fadeOut');
+    setTimeout(()=> placedEl.style.visibility = 'hidden', 140);
+  });
+
+  // clicking a placed card returns it to tray (fast UX)
+  placedEl.addEventListener('click', ()=>{
+    returnPlacedToTray(placedEl);
+  });
+}
+
+/* return placed element back to tray (used on click or drop to tray) */
+function returnPlacedToTray(placedEl){
+  const val = Number(placedEl.dataset.value);
+  // remove placedEl
+  placedEl.remove();
+  placedCount = Math.max(0, placedCount - 1);
+
+  // recreate tray card
+  const newId = uniqueId('tray');
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = newId;
+  card.dataset.value = val;
+  card.draggable = true;
+  card.textContent = val;
+  makeTrayCardDraggable(card);
+  tray.appendChild(card);
+
+  setMessage(`${val} ∉ tray`, `کارت بازگشت به سینی.`);
+}
+
+/* drop handlers for set boxes */
+boxes.forEach(box => {
+  box.addEventListener('dragover', e => e.preventDefault());
+
+  box.addEventListener('drop', e => {
     e.preventDefault();
-    const value=parseInt(e.dataTransfer.getData("value"));
-    const origin=e.dataTransfer.getData("origin");
-    dropToBox(value,box,origin,e);
+    const value = Number(e.dataTransfer.getData('value'));
+    const origin = e.dataTransfer.getData('origin'); // 'tray' or 'placed'
+    const dragId = e.dataTransfer.getData('dragId');
+    const fromSet = e.dataTransfer.getData('fromSet'); // if placed
+    handleDropToSet({value, origin, dragId, fromSet}, box);
   });
 });
 
-function dropToBox(value,box,origin,evt){
-  const setName=box.dataset.set;
+/* tray drop: allow returning placed items by dropping to tray */
+tray.addEventListener('dragover', e => e.preventDefault());
+tray.addEventListener('drop', e => {
+  e.preventDefault();
+  const origin = e.dataTransfer.getData('origin');
+  const dragId = e.dataTransfer.getData('dragId');
+  const value = Number(e.dataTransfer.getData('value'));
 
-  // ❌ عضو داخل مجموعه نیست
-  if(!sets[setName].includes(value)){
-    showBigMessage(`عدد ${value} در مجموعه ${setName} وجود ندارد!`);
-    score-=5; updateScore();
+  if(origin === 'placed'){
+    const placedEl = document.getElementById(dragId);
+    if(placedEl){
+      // remove placed and recreate tray card
+      placedEl.remove();
+      placedCount = Math.max(0, placedCount - 1);
+      const newId = uniqueId('tray');
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = newId;
+      card.dataset.value = value;
+      card.draggable = true;
+      card.textContent = value;
+      makeTrayCardDraggable(card);
+      tray.appendChild(card);
+      setMessage(`${value} ∉ tray`, `کارت بازگشت به سینی.`);
+    }
+  } else if(origin === 'tray'){
+    // restore hidden tray card if user canceled dropping
+    const el = document.getElementById(dragId);
+    if(el){ el.style.visibility = 'visible'; el.classList.remove('fadeOut'); }
+  }
+});
+
+/* handle drop into a set box */
+function handleDropToSet(drag, box){
+  const setName = box.dataset.set;
+  const contentsEl = box.querySelector('.set-contents');
+  const existing = Array.from(contentsEl.querySelectorAll('.placed')).map(d => Number(d.dataset.value));
+  const value = Number(drag.value);
+
+  // if origin was placed (moving between sets)
+  if(drag.origin === 'placed'){
+    const orig = document.getElementById(drag.dragId);
+    if(!orig){
+      // nothing to move
+      return;
+    }
+    const fromSet = drag.fromSet || orig.closest('.set-box')?.dataset?.set;
+    // if dropping into same set -> just restore visibility
+    if(fromSet === setName){
+      orig.style.visibility = 'visible'; orig.classList.remove('fadeOut');
+      setMessage(`${value} ∈ ${setName}`, `${value} عضو مجموعهٔ ${setName} است (همان‌جا).`);
+      return;
+    }
+    // duplicate check in target
+    if(existing.includes(value)){
+      showBigWarn('این عدد تکراری است', `عدد ${value} قبلاً در مجموعهٔ ${setName} قرار گرفته.`, 2000, box);
+      // restore to original parent (orig)
+      orig.style.visibility = 'visible'; orig.classList.remove('fadeOut');
+      return;
+    }
+    // membership check: if value not in set's definition -> not allowed
+    if(!sets[setName].includes(value)){
+      showBigWarn('دقت کن! این عضو داخل این مجموعه نیست', `عدد ${value} عضو مجموعهٔ ${setName} نیست.`, 2000, box);
+      orig.style.visibility = 'visible'; orig.classList.remove('fadeOut');
+      return;
+    }
+    // allowed: move element from old parent to new
+    orig.remove(); // detach from old parent
+    contentsEl.appendChild(orig);
+    orig.classList.remove('fadeOut');
+    orig.classList.add('placed-anim');
+    setTimeout(()=> orig.classList.remove('placed-anim'), 420);
+    setMessage(`${value} ∈ ${setName}`, `${value} حالا عضو مجموعهٔ ${setName} است.`);
+    addGreenFlash(box);
     return;
   }
 
-  // درست است → اضافه کن
-  const placed=document.createElement("div");
-  placed.textContent=value;
-  placed.className="card placed";
-  placed.dataset.value=value;
-  box.appendChild(placed);
+  // origin is tray (placing fresh)
+  // duplicate check
+  if(existing.includes(value)){
+    showBigWarn('این عدد تکراری است', `عدد ${value} قبلاً در مجموعهٔ ${setName} قرار گرفته.`, 2000, box);
+    updateScore(-10);
+    // restore tray card visibility if it was hidden
+    const trayCard = document.getElementById(drag.dragId);
+    if(trayCard){ trayCard.style.visibility = 'visible'; trayCard.classList.remove('fadeOut'); }
+    return;
+  }
 
+  // membership check
+  if(!sets[setName].includes(value)){
+    showBigWarn('دقت کن! این عضو داخل این مجموعه نیست', `عدد ${value} عضو مجموعهٔ ${setName} نیست.`, 2000, box);
+    updateScore(-10);
+    const trayCard = document.getElementById(drag.dragId);
+    if(trayCard){ trayCard.style.visibility = 'visible'; trayCard.classList.remove('fadeOut'); }
+    return;
+  }
+
+  // correct placement: create placed element inside this set, remove original tray card
+  const placed = document.createElement('div');
+  placed.className = 'placed placed-anim';
+  placed.textContent = value;
+  placed.dataset.value = value;
+  placed.id = uniqueId('placed');
+
+  makePlacedDraggable(placed);
+  contentsEl.appendChild(placed);
   addGreenFlash(box);
 
+  // remove original tray card (if exists)
+  const trayCard = document.getElementById(drag.dragId);
+  if(trayCard) trayCard.remove();
+
   placedCount++;
-  document.getElementById("message").innerHTML=`<span class='math-text'>${value} ∈ ${setName}</span> — درست!`;
-  score+=10; updateScore();
+  updateScore(+10);
+  setMessage(`${value} ∈ ${setName}`, `${value} عضو مجموعهٔ ${setName} است؛ آفرین!`);
 
-  if(placedCount===9){ endLevel(); }
+  // check end condition: all initial tray cards placed
+  if(placedCount === initialTrayCount){
+    // show end modal
+    setTimeout(()=> showEndModal(), 420);
+  }
 }
 
-/* پیام بزرگ */
-function showBigMessage(msg){
-  const ov=document.getElementById("overlay");
-  document.querySelector("#endBox h2").innerHTML=msg;
-  document.querySelector("#endBox p").style.display="none";
-  document.querySelector(".yes").style.display="none";
-  document.querySelector(".no").style.display="none";
-  ov.style.display="flex";
-  setTimeout(()=>{ ov.style.display="none"; },2000);
+/* show end modal */
+function showEndModal(){
+  overlay.style.display = 'flex';
+  endTitle.textContent = '🎉 مرحله ۱ با موفقیت کامل شد!';
+  endText.textContent = 'آماده‌ای برای مرحلهٔ ۲؟';
 }
 
-/* پایان مرحله */
-function endLevel(){
-  const ov=document.getElementById("overlay");
-  document.querySelector("#endBox h2").innerHTML="🎉 مرحله ۱ با موفقیت کامل شد!";
-  document.query
+/* nextLevel / retry buttons */
+btnNext.addEventListener('click', ()=> {
+  // placeholder: go to next level (now just hide modal and show a message)
+  overlay.style.display = 'none';
+  setMessage('شروع مرحلهٔ ۲', 'در حال حاضر مرحلهٔ ۲ ساخته نشده — بعداً اضافه کن.');
+});
+btnRetry.addEventListener('click', ()=> {
+  overlay.style.display = 'none';
+  // reset stage: remove all placed and restore tray as initial
+  resetStage();
+});
+
+/* reset stage */
+function resetStage(){
+  // remove all placed
+  document.querySelectorAll('.placed').forEach(el=> el.remove());
+  // clear trays and recreate initial 9 cards
+  tray.innerHTML = '';
+  const initialValues = [1,2,3,3,4,5,5,5,6];
+  initialValues.forEach((v,i)=>{
+    const id = 'tray-' + (i+1);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = id;
+    card.dataset.value = v;
+    card.draggable = true;
+    card.textContent = v;
+    makeTrayCardDraggable(card);
+    tray.appendChild(card);
+  });
+  placedCount = 0;
+  score = 0;
+  scoreVal.textContent = score;
+  setMessage('', '');
+}
+
+/* create initial draggable behaviour for existing tray cards */
+document.querySelectorAll('#tray .card').forEach(el => makeTrayCardDraggable(el));
+
+/* safety: if user cancels drop (dragend), restore hidden tray card visibility */
+document.addEventListener('dragend', e=>{
+  const dragId = e.dataTransfer?.getData?.('dragId') || null;
+  if(dragId){
+    const el = document.getElementById(dragId);
+    if(el && el.classList.contains('fadeOut')){
+      el.style.visibility = 'visible';
+      el.classList.remove('fadeOut');
+    }
+  }
+});
+
+/* handle pressing Esc to close end modal */
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){ overlay.style.display = 'none'; }
+});
+
+/* init message */
+setMessage('هدف: قرار دادن اعضای درست در مجموعه‌ها', 'هر کارت را بکش و روی مجموعه مناسب رها کن. کارت‌های داخل مجموعه را هم می‌توانی بکشیده یا کلیک کنی تا برگردند به سینی.');
+</script>
+</body>
+</html>
