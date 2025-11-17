@@ -120,18 +120,57 @@ boxes.forEach(b=>{
   });
 });
 
-function dropToBox(value,box){
-  const placed=document.createElement("div");
-  placed.textContent=value;
-  placed.className="card";
-  placed.style.marginTop="10px";
-  placed.style.opacity="0";
-  box.appendChild(placed);
-  setTimeout(()=>placed.style.opacity="1",50);
+function dropToBox(value, box){
+  const s = box.dataset.set;
 
-  check(value,box);
+  // جلوگیری از تکرار قرارگیری عدد
+  let repeated = false;
+  box.querySelectorAll('.placed').forEach(p=>{ if(parseInt(p.textContent)===value) repeated = true; });
+
+  if(repeated){
+    message.textContent = `⚠ عدد ${value} قبلاً در مجموعه ${s} قرار گرفته است — دقت کن!`;
+    box.classList.add('shake');
+    setTimeout(()=>box.classList.remove('shake'),350);
+    restoreCard(value);
+    return;
+  }
+
+  // بررسی درست یا غلط بودن انتخاب
+  if(!sets[s].includes(value)){
+    message.textContent = `${value} ∉ ${s} — عضو این مجموعه نیست ❌`;
+    box.classList.add('shake');
+    setTimeout(()=>box.classList.remove('shake'),350);
+    restoreCard(value);
+    return;
+  }
+
+  // ایجاد کارت قرار گرفته
+  const placed = document.createElement("div");
+  placed.textContent = value;
+  placed.className = "card placed";
+  placed.style.marginTop = "10px";
+  placed.style.opacity = "0";
+  box.appendChild(placed);
+  setTimeout(()=>placed.style.opacity="1",80);
+
+  // پیام عضویت صحیح
+  message.textContent = `${value} ∈ ${s} — عالی! عضو مجموعه است ✨`;
+  box.classList.add('glow-success');
+  setTimeout(()=>box.classList.remove('glow-success'),500);
+
   total++;
-  if(total===8) document.getElementById("nextStageBox").style.display="block";
+  if(total===8) document.getElementById("nextStageBox").style.display = "block";
+}
+
+function restoreCard(value){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(c=>{
+    if(parseInt(c.dataset.value)===value && c.style.visibility==="hidden"){
+      c.style.visibility = "visible";
+      c.classList.remove("fadeOut");
+    }
+  });
+}) document.getElementById("nextStageBox").style.display="block";
 }
 
 function check(value,box){
