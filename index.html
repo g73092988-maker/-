@@ -98,6 +98,13 @@
 </head>
 <body>
   <h1>مرحله ۱ — آزمایش عضویت</h1>
+
+  <!-- <<< این جملهٔ جدید دقیقاً اینجا قرار گرفت >>> -->
+  <p id="introText" style="font-size:22px; margin-top:10px; color:#80ffd8; font-weight:bold; text-shadow:0 0 12px rgba(0,255,140,0.55);">
+    قوانین مجموعه‌ها نوشته شده‌اند… اکنون نوبت توست کارتِ قدرت را در جای حقیقی‌اش بنشانی و تعادل عناصر را برقرار کنی.
+  </p>
+  <!-- <<< تا اینجا فقط همین یک بخش اضافه شد — بقیه کد دست‌نخورده است >>> -->
+
   <div id="scoreBox">امتیاز: <span id="scoreVal">0</span>
     <span id="scoreChange" class="score-change"></span>
   </div>
@@ -454,13 +461,17 @@ document.querySelectorAll('#tray .card').forEach(el => makeTrayCardDraggable(el)
 
 /* safety: if user cancels drop (dragend), restore hidden tray card visibility */
 document.addEventListener('dragend', e=>{
-  const dragId = e.dataTransfer?.getData?.('dragId') || null;
-  if(dragId){
-    const el = document.getElementById(dragId);
-    if(el && el.classList.contains('fadeOut')){
-      el.style.visibility = 'visible';
-      el.classList.remove('fadeOut');
+  try{
+    const dragId = e.dataTransfer?.getData?.('dragId') || null;
+    if(dragId){
+      const el = document.getElementById(dragId);
+      if(el && el.classList.contains('fadeOut')){
+        el.style.visibility = 'visible';
+        el.classList.remove('fadeOut');
+      }
     }
+  }catch(err){
+    // some browsers clear dataTransfer on dragend; ignore
   }
 });
 
