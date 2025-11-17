@@ -33,15 +33,16 @@
    background:rgba(255,255,255,0.07);
    padding:20px;
    border-radius:18px;
-   min-width:180px;
+   min-width:200px;
    border:1px solid rgba(255,255,255,0.2);
    position:relative;
+   text-align:center;
  }
  .set-box.glow-success { box-shadow:0 0 20px #2ecc71; transition:0.4s; }
  .set-box.shake { animation:shake .3s; }
  @keyframes shake{0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-6px);}100%{transform:translateX(0);}}
 
- #message { margin-top:18px; font-size:20px; min-height:48px; line-height:1.3; }
+ #message { margin-top:25px; font-size:26px; min-height:28px; }
 
  .big-warning {
    position:fixed;
@@ -56,38 +57,30 @@
  }
  @keyframes pop{0%{transform:scale(0.2);}100%{transform:scale(1);} }
 
- #scoreBox { margin-top:14px; font-size:22px; font-weight:600; color:#7fd3ff; position:relative; display:inline-block; }
+ #scoreBox { margin-top:20px; font-size:26px; }
+ .rtl-fix { direction:ltr; unicode-bidi:embed; font-weight:bold; }
 
- /* انیمیشن کوچک برای نشان دادن تغییر امتیاز (+10 / -10) */
- .score-change {
-   position: absolute;
-   right: -10px;
-   top: -30px;
-   font-size:18px;
-   padding:6px 10px;
-   border-radius:8px;
-   background: rgba(0,0,0,0.6);
-   color: #fff;
-   transform-origin: center;
-   opacity: 0;
-   transform: scale(0.6);
-   transition: transform 260ms ease, opacity 260ms ease;
-   z-index: 50;
+ /* ✨ انیمیشن جدید برای نشستن کارت */
+ @keyframes dropIn {
+   0% { transform: translateY(-30px) scale(0.4); opacity:0; }
+   60% { transform: translateY(10px) scale(1.1); opacity:1; }
+   100% { transform: translateY(0) scale(1); }
  }
- .score-change.show {
-   opacity: 1;
-   transform: scale(1.15);
+ .placed { animation: dropIn .45s ease-out; }
+
+ /* استایل ریاضی زیبا */
+ .math-text {
+   font-size:28px;
+   font-weight:bold;
+   color:#9cdcfe;
+   text-shadow:0 0 8px #1e90ff;
  }
- .score-change.plus { background: rgba(46, 204, 113, 0.95); }
- .score-change.minus { background: rgba(231, 76, 60, 0.95); }
 
 </style>
 </head>
 <body>
 <h1>مرحله ۱ — آزمایش عضویت</h1>
-<div id="scoreBox">امتیاز: <span id="scoreVal">0</span>
-  <div id="scoreChange" class="score-change" aria-hidden="true"></div>
-</div>
+<div id="scoreBox">امتیاز: ۰</div>
 
 <div class="sets-container">
   <div class="set-box" data-set="A">A = { 1 , 3 , 5 }</div>
@@ -111,41 +104,13 @@
 <div class="big-warning" id="bigWarn"></div>
 
 <script>
-/* --- تنظیمات و داده‌ها (بدون تغییرِ ساختارِ قبلی) --- */
 const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
 let total=0;
 let score=0;
 
-/* المان‌ها */
-const scoreVal = document.getElementById('scoreVal');
-const scoreChangeEl = document.getElementById('scoreChange');
-const messageEl = document.getElementById('message');
+function updateScore(){ document.getElementById("scoreBox").textContent=`امتیاز: ${score}`; }
+function showWarn(msg){ const w=document.getElementById("bigWarn"); w.textContent=msg; w.style.display="block"; setTimeout(()=>w.style.display="none",1200); }
 
-/* بروزرسانی امتیاز (و نمایش انیمیشن +10 / -10) */
-function updateScore(delta){
-  score += delta;
-  scoreVal.textContent = score;
-  // نمایش موقت تغییر امتیاز
-  if(delta>0){
-    scoreChangeEl.textContent = `+${delta}`;
-    scoreChangeEl.className = 'score-change plus show';
-  } else {
-    scoreChangeEl.textContent = `${delta}`;
-    scoreChangeEl.className = 'score-change minus show';
-  }
-  // ناپدید شدن بعد از 700ms
-  setTimeout(()=>{ scoreChangeEl.className = 'score-change'; },700);
-}
-
-/* پیام بزرگ وسط صفحه (برای هشدارها) */
-function showWarn(msg){
-  const w=document.getElementById("bigWarn");
-  w.textContent=msg;
-  w.style.display="block";
-  setTimeout(()=>w.style.display="none",1200);
-}
-
-/* درگ کردن کارت‌ها (ساختار همون قبلی حفظ شده) */
 const cards=document.querySelectorAll('.card');
 cards.forEach(c=>{
   c.addEventListener('dragstart',e=>{
@@ -156,42 +121,34 @@ cards.forEach(c=>{
   });
 });
 
-/* drop zone ها */
 const boxes=document.querySelectorAll('.set-box');
 boxes.forEach(b=>{
   b.addEventListener('dragover',e=>e.preventDefault());
   b.addEventListener('drop',e=>{ e.preventDefault(); dropToBox(parseInt(e.dataTransfer.getData("value")),b,e); });
 });
 
-/* تابع اصلی که وقتی کارت انداخته شد اجرا می‌شود */
 function dropToBox(value,box,evt){
   const setName=box.dataset.set;
   const arr=Array.from(box.querySelectorAll('.placed')).map(x=>parseInt(x.dataset.value));
+  const size=sets[setName].length;
+  const mathInfo = `<span class='math-text'>|${setName}| = ${size}</span>`;
 
-  // حالت تکراری
   if(arr.includes(value)){
     showWarn("این عضو تکراری است!");
-    messageEl.innerHTML = `<span dir="ltr">${value} ∈ ${setName}</span><br><span>${value} عضو مجموعهٔ ${setName} است؛ اما قبلاً قرار گرفته (تکراری).</span>`;
-    updateScore(-10);                   // −10 امتیاز برای تکراری
+    document.getElementById("message").innerHTML=
+      `<span class='math-text'>${value} ∈ ${setName}</span> — عدد تکراری است!<br>${mathInfo}`;
+    score-=10; updateScore();
     box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
     resetCard(evt); return;
   }
 
-  // حالت عضو نبودن
   if(!sets[setName].includes(value)){
-    showWarn("دقت کن! این عضو داخل این مجموعه نیست");
-    messageEl.innerHTML = `<span dir="ltr">${value} ∉ ${setName}</span><br><span>${value} عضو مجموعهٔ ${setName} نیست؛ اشتباه کردی، بیشتر تلاش کن.</span>`;
-    updateScore(-10);                   // −10 امتیاز برای اشتباه
+    showWarn("خطا! عضو داخل این مجموعه نیست");
+    document.getElementById("message").innerHTML=
+      `<span class='math-text'>${value} ∉ ${setName}</span> — این عضو در این مجموعه وجود ندارد!<br>${mathInfo}`;
+    score-=10; updateScore();
     box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
     resetCard(evt); return;
-  }
-
-  // حالت درست: قرار گرفتن در مجموعه
-  const draggedCard = document.querySelector(`.card[data-value='${value}']`);
-  // محو و حذف کارت اصلی از سینی
-  if(draggedCard){
-    draggedCard.classList.add("fadeOut");
-    setTimeout(()=>{ if(draggedCard.parentElement) draggedCard.remove(); },300);
   }
 
   const placed=document.createElement("div");
@@ -199,34 +156,18 @@ function dropToBox(value,box,evt){
   placed.className="card placed";
   placed.dataset.value=value;
   placed.style.marginTop="10px";
-  placed.style.opacity="0";
-  placed.style.transform="scale(0.85)";
   box.appendChild(placed);
 
-  setTimeout(()=>{
-    placed.style.opacity="1";
-    placed.style.transform="scale(1)";
-  },50);
+  document.getElementById("message").innerHTML=
+    `<span class='math-text'>${value} ∈ ${setName}</span> — درست! عضو متعلق به مجموعه است.<br>${mathInfo}`;
 
-  messageEl.innerHTML = `<span dir="ltr">${value} ∈ ${setName}</span><br><span>${value} عضو مجموعهٔ ${setName} است؛ آفرین!</span>`;
   box.classList.add('glow-success'); setTimeout(()=>box.classList.remove('glow-success'),500);
 
-  updateScore(+10); // +10 امتیاز برای درست
+  score+=10; updateScore();
   total++;
 }
 
-/* بازگرداندن کارت به سینی (در صورتی که اشتباه یا تکراری بوده) */
 function resetCard(evt){
   const original=evt.dataTransfer.getData("original");
-  if(!original) return;
   const temp=document.createElement("div"); temp.innerHTML=original;
-  const card=temp.firstChild;
-  card.classList.remove("fadeOut");
-  card.style.visibility="visible";
-  // قرار دادن کارت دوباره در سینی در انتها
-  document.querySelector('.cards').appendChild(card);
-}
-
-</script>
-</body>
-</html>
+  const card=temp
