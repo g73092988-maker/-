@@ -100,6 +100,24 @@
   /* اجازه جابه‌جایی کارت‌های قرارگرفته */
   .placed { cursor:grab; }
 
+
+ /* استایل متن ریاضی */
+ .math-text {
+   direction:ltr;
+   unicode-bidi:embed;
+   font-weight:bold;
+   font-size:24px;
+   color:#4fd6ff;
+ }
+
+ /* انیمیشن قرار گرفتن کارت داخل مجموعه */
+ @keyframes dropIn {
+   0% { transform: scale(0.1) translateY(-20px); opacity:0; }
+   100% { transform: scale(1) translateY(0); opacity:1; }
+ }
+
+ .placed { animation: dropIn 0.35s ease-out; }
+
 </style>
 </head>
 <body>
@@ -136,6 +154,14 @@ function updateScore(){ document.getElementById("scoreBox").textContent=`امت�
 function showWarn(msg){ const w=document.getElementById("bigWarn"); w.textContent=msg; w.style.display="block"; setTimeout(()=>w.style.display="none",1200); }
 
 const cards=document.querySelectorAll('.card');
+function cardDragStart(e){
+  e.target.classList.add("fadeOut");
+  setTimeout(()=>e.target.style.visibility="hidden",300);
+  e.dataTransfer.setData("value",e.target.dataset.value);
+  e.dataTransfer.setData("origin","placed");
+  e.dataTransfer.setData("original",e.target.outerHTML);
+}
+
 cards.forEach(c=>{
   c.addEventListener('dragstart',e=>{
     e.target.classList.add("fadeOut");
@@ -176,6 +202,13 @@ function dropToBox(value,box,evt){
   }
 
   const placed=document.createElement("div");
+  placed.textContent=value;
+  placed.className="card placed";
+  placed.dataset.value=value;
+  placed.setAttribute("draggable","true");
+  placed.addEventListener('dragstart',cardDragStart);
+
+  box.appendChild(placed);("div");
   placed.textContent=value;
   placed.className="card placed placed-anim";("div");
   placed.textContent=value;
