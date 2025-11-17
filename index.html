@@ -14,16 +14,6 @@
  }
  h1 { margin-top: 25px; }
 
- .scoreBox{margin-top:15px;font-size:26px;color:#6cf;}
-
- .card.fadeOut { opacity:0; transform: translateY(-10px); transition:0.35s ease; }
- .card.returnBack { animation: returnCard .35s ease; }
-
- @keyframes returnCard {
-   0% { transform: translateY(-10px); opacity:0.3; }
-   100% { transform: translateY(0); opacity:1; }
- }
-
  .cards { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:30px; }
  .card {
    background: rgba(255,255,255,0.12);
@@ -36,6 +26,7 @@
    box-shadow:0 4px 12px rgba(0,0,0,0.4);
  }
  .card:hover { transform:scale(1.1); }
+ .card.fadeOut { opacity:0; transform: translateY(-10px); transition:0.4s ease; }
 
  .sets-container { display:flex; gap:18px; justify-content:center; margin-top:20px; }
  .set-box {
@@ -48,9 +39,7 @@
  }
  .set-box.glow-success { box-shadow:0 0 20px #2ecc71; transition:0.4s; }
  .set-box.shake { animation:shake .3s; }
-
- @keyframes shake {
-   0%{transform:translateX(0);} 25%{transform:translateX(-6px);} 50%{transform:translateX(6px);} 75%{transform:translateX(-6px);} 100%{transform:translateX(0);} }
+ @keyframes shake{0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-6px);}100%{transform:translateX(0);}}
 
  #message { margin-top:25px; font-size:22px; min-height:28px; }
 
@@ -67,33 +56,13 @@
  }
  @keyframes pop{0%{transform:scale(0.2);}100%{transform:scale(1);} }
 
- #nextStageBox {
-   position:fixed;
-   bottom:0; left:0; right:0;
-   background:rgba(255,255,255,0.08);
-   padding:25px;
-   border-top:1px solid rgba(255,255,255,0.2);
-   backdrop-filter:blur(5px);
-   display:none;
- }
- .choice-btn { padding:12px 25px; margin:5px; border-radius:12px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); cursor:pointer; }
- .choice-btn:hover { background:rgba(255,255,255,0.25); }
+ #scoreBox { margin-top:20px; font-size:26px; }
 
- #startScreen {
-   position:fixed;
-   inset:0;
-   background:rgba(0,0,0,0.65);
-   display:none;
-   align-items:center;
-   justify-content:center;
-   font-size:60px;
-   backdrop-filter:blur(4px);
- }
 </style>
 </head>
 <body>
 <h1>مرحله ۱ — آزمایش عضویت</h1>
-<div class="scoreBox">امتیاز: <span id="score">0</span></div>
+<div id="scoreBox">امتیاز: ۰</div>
 
 <div class="sets-container">
   <div class="set-box" data-set="A">A = { 1 , 3 , 5 }</div>
@@ -116,71 +85,49 @@
 <div id="message"></div>
 <div class="big-warning" id="bigWarn"></div>
 
-<div id="nextStageBox">
-  <h2>🎉 مرحله ۱ کامل شد! آماده‌ای؟</h2>
-  <button class="choice-btn" onclick="goNext(true)">بله ✔</button>
-  <button class="choice-btn" onclick="goNext(false)">خیر ✖</button>
-</div>
-
-<div id="startScreen">بزن بریم! 🚀</div>
-
 <script>
-let score=0;
-const scoreBox=document.getElementById("score");
-
-function addScore(x){ score+=x; scoreBox.textContent=score; }
-
-function showWarn(msg){
-  const w=document.getElementById("bigWarn");
-  w.textContent=msg;
-  w.style.display="block";
-  setTimeout(()=>w.style.display="none",1300);
-}
-
 const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
 let total=0;
+let score=0;
+
+function updateScore(){ document.getElementById("scoreBox").textContent=`امتیاز: ${score}`; }
+function showWarn(msg){ const w=document.getElementById("bigWarn"); w.textContent=msg; w.style.display="block"; setTimeout(()=>w.style.display="none",1200); }
 
 const cards=document.querySelectorAll('.card');
 cards.forEach(c=>{
   c.addEventListener('dragstart',e=>{
+    e.target.classList.add("fadeOut");
+    setTimeout(()=>e.target.style.visibility="hidden",300);
     e.dataTransfer.setData("value",e.target.dataset.value);
-    e.dataTransfer.setData("id",Math.random());
+    e.dataTransfer.setData("original",e.target.outerHTML);
   });
 });
 
 const boxes=document.querySelectorAll('.set-box');
 boxes.forEach(b=>{
   b.addEventListener('dragover',e=>e.preventDefault());
-  b.addEventListener('drop',e=>{
-    e.preventDefault();
-    dropToBox(parseInt(e.dataTransfer.getData("value")),b,e);
-  });
+  b.addEventListener('drop',e=>{ e.preventDefault(); dropToBox(parseInt(e.dataTransfer.getData("value")),b,e); });
 });
 
 function dropToBox(value,box,evt){
   const setName=box.dataset.set;
-  const existing=Array.from(box.querySelectorAll('.placed')).map(x=>parseInt(x.dataset.value));
+  const arr=Array.from(box.querySelectorAll('.placed')).map(x=>parseInt(x.dataset.value));
 
-  const draggedCard=document.querySelector(`.card[data-value='${value}']`);
-
-  if(existing.includes(value)){
-    box.classList.add('shake');
+  if(arr.includes(value)){
     showWarn("این عضو تکراری است!");
-    addScore(-10);
-    returnCard(draggedCard);
-    return;
+    document.getElementById("message").textContent=`${value} ∈ ${setName} — ${value} عضو مجموعهٔ ${setName} است؛ اما قبلاً قرار گرفته (تکراری).`;
+    score-=10; updateScore();
+    box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
+    resetCard(evt); return;
   }
 
   if(!sets[setName].includes(value)){
-    box.classList.add('shake');
     showWarn("دقت کن! این عضو داخل این مجموعه نیست");
-    addScore(-10);
-    returnCard(draggedCard);
-    return;
+    document.getElementById("message").textContent=`${value} ∉ ${setName} — ${value} عضو مجموعهٔ ${setName} نیست؛ اشتباه کردی، بیشتر تلاش کن.`;
+    score-=10; updateScore();
+    box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
+    resetCard(evt); return;
   }
-
-  draggedCard.classList.add("fadeOut");
-  setTimeout(()=>draggedCard.remove(),300);
 
   const placed=document.createElement("div");
   placed.textContent=value;
@@ -188,32 +135,26 @@ function dropToBox(value,box,evt){
   placed.dataset.value=value;
   placed.style.marginTop="10px";
   placed.style.opacity="0";
+  placed.style.transform="scale(0.2)";
   box.appendChild(placed);
-  setTimeout(()=>placed.style.opacity="1",60);
 
-  addScore(10);
+  setTimeout(()=>{
+    placed.style.opacity="1";
+    placed.style.transform="scale(1)";
+  },50);
 
-  message.textContent=`${value} ∈ ${setName} — عالی!`;   
-  box.classList.add('glow-success');
-  setTimeout(()=>box.classList.remove('glow-success'),500);
+  document.getElementById("message").textContent=`${value} ∈ ${setName} — ${value} عضو مجموعهٔ ${setName} است؛ آفرین!`;
+  box.classList.add('glow-success'); setTimeout(()=>box.classList.remove('glow-success'),500);
 
+  score+=10; updateScore();
   total++;
-  if(total===9) document.getElementById("nextStageBox").style.display="block";
 }
 
-function returnCard(card){
-  card.style.visibility="visible";
-  card.classList.remove("fadeOut");
-  card.classList.add("returnBack");
-  setTimeout(()=>card.classList.remove("returnBack"),400);
-}
-
-function goNext(yes){
-  if(yes){
-    document.getElementById("startScreen").style.display="flex";
-  } else {
-    if(confirm("میخوای دوباره امتحان کنی؟")) location.reload();
-  }
+function resetCard(evt){
+  const original=evt.dataTransfer.getData("original");
+  const temp=document.createElement("div"); temp.innerHTML=original;
+  const card=temp.firstChild; card.classList.remove("fadeOut"); card.style.visibility="visible";
+  document.querySelector('.cards').appendChild(card);
 }
 </script>
 </body>
