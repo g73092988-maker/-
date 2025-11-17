@@ -13,7 +13,6 @@
   }
   h1{ margin:6px 0 12px; font-size:20px; }
 
-  /* score */
   #scoreBox{ font-size:20px; margin-bottom:12px; color:#9be7ff; position:relative; display:inline-block;}
   .score-change{ position:absolute; top:-36px; right:-6px; padding:6px 10px; border-radius:10px; font-weight:700; opacity:0; transform:scale(.7); transition:all .28s ease; pointer-events:none;}
   .score-change.show{ opacity:1; transform:scale(1.06); }
@@ -37,30 +36,34 @@
   .card:active{ cursor:grabbing; }
   .card.fadeOut{ opacity:0; transform:translateY(-10px); transition:all .28s ease; visibility:hidden; }
 
-  /* placed */
   .placed{ background: rgba(255,255,255,0.06); border-radius:10px; padding:8px 12px; display:inline-block; margin:6px 6px 0 0; }
   .placed[draggable="true"]{ cursor:grab; }
 
-  /* shake */
   @keyframes shake{ 0%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-6px)}100%{transform:none} }
   .shake{ animation:shake .36s; }
 
-  /* big warn */
   .big-warning{ position:fixed; left:50%; top:48%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.75); padding:20px 28px; border-radius:14px; display:none; font-size:20px; z-index:999; }
 
-  /* message area */
   #message{ margin-top:18px; min-height:62px; font-size:16px; line-height:1.35; }
 
-  /* math style (LTR) */
   .math-text{ direction:ltr; unicode-bidi:embed; display:block; font-weight:700; font-size:20px; color:var(--accent); text-shadow:0 0 8px rgba(30,144,255,0.15); margin-bottom:6px; }
 
-  /* drop-in animation */
   @keyframes dropIn { 0%{transform:translateY(-18px) scale(.6); opacity:0} 60%{transform:translateY(8px) scale(1.05); opacity:1} 100%{transform:translateY(0) scale(1);} }
   .placed-anim{ animation: dropIn .42s cubic-bezier(.2,.9,.2,1); }
 
-  /* small helpers */
   .tray{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
   .set-contents{ min-height:80px; display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; padding-top:6px; }
+
+  /* ★★ افکت حلقه نور سبز ★★ */
+  @keyframes greenPulse {
+    0% { box-shadow: 0 0 0 rgba(0,255,120,0); }
+    40% { box-shadow: 0 0 22px rgba(0,255,120,0.9), 0 0 34px rgba(0,255,120,0.5); }
+    100% { box-shadow: 0 0 0 rgba(0,255,120,0); }
+  }
+  .card-green-glow {
+    animation: greenPulse 0.65s ease-out;
+    border-color: rgba(0,255,120,0.9) !important;
+  }
 
 </style>
 </head>
@@ -88,7 +91,6 @@
     </div>
   </div>
 
-  <!-- کارت‌ها (ثابت در HTML) -->
   <div class="cards" id="tray">
     <div class="card" draggable="true" id="tray-1" data-value="1">۱</div>
     <div class="card" draggable="true" id="tray-2" data-value="2">۲</div>
@@ -118,7 +120,6 @@ const bigWarn = document.getElementById('bigWarn');
 const tray = document.getElementById('tray');
 const setBoxes = document.querySelectorAll('.set-box');
 
-/* کمک‌کننده‌ها */
 function showBig(msg){
   bigWarn.textContent = msg;
   bigWarn.style.display = 'block';
@@ -127,107 +128,93 @@ function showBig(msg){
 function updateScore(delta){
   score += delta;
   scoreValEl.textContent = score;
-  // animation small popup
   scoreChangeEl.textContent = (delta>0? '+'+delta : delta);
   scoreChangeEl.className = 'score-change ' + (delta>0? 'plus show' : 'minus show');
   setTimeout(()=> scoreChangeEl.className = 'score-change', 700);
 }
 function setMessage(mathLine, persian){
-  // mathLine must be LTR: use span with dir=ltr
   messageEl.innerHTML = `<span class="math-text" dir="ltr">${mathLine}</span><div style="margin-top:6px">${persian}</div>`;
 }
 
-/* ---------- درگ از سینی ---------- */
 function makeTrayCardDraggable(el){
   el.addEventListener('dragstart', e=>{
     e.dataTransfer.setData('value', el.dataset.value);
     e.dataTransfer.setData('origin','tray');
     e.dataTransfer.setData('dragId', el.id);
-    // hide visually
     el.classList.add('fadeOut');
-    setTimeout(()=> el.style.visibility = 'hidden', 220);
+    setTimeout(()=> el.style.visibility = 'hidden', 180);
   });
 }
 document.querySelectorAll('#tray .card').forEach(makeTrayCardDraggable);
 
-/* ---------- drop zones ---------- */
 document.querySelectorAll('.set-box').forEach(box=>{
   box.addEventListener('dragover', e => e.preventDefault());
   box.addEventListener('drop', e => {
     e.preventDefault();
     const value = Number(e.dataTransfer.getData('value'));
-    const origin = e.dataTransfer.getData('origin'); // 'tray' or 'placed'
-    const dragId = e.dataTransfer.getData('dragId'); // id of element dragged
+    const origin = e.dataTransfer.getData('origin');
+    const dragId = e.dataTransfer.getData('dragId');
     handleDrop({value, origin, dragId}, box, e);
   });
 });
 
-/* ---------- handle drop ---------- */
 function handleDrop(drag, box, evt){
   const setName = box.dataset.set;
   const contentsEl = box.querySelector('.set-contents');
 
-  // existing values in this set
   const existing = Array.from(contentsEl.querySelectorAll('.placed')).map(d => Number(d.dataset.value));
 
-  // if source is placed (moving between sets)
   if(drag.origin === 'placed'){
-    // find original placed element by id (drag.dragId)
     const orig = document.getElementById(drag.dragId);
-    if(!orig) return; // nothing to do
+    if(!orig) return;
     const fromSet = orig.closest('.set-box')?.dataset?.set || null;
-    // if dropping into same set -> ignore
+
     if(fromSet === setName){
-      // just show message (no score change)
       setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} عضو مجموعهٔ ${setName} است (در همون مجموعه).`);
-      return;
-    }
-    // duplicate check in target
-    if(existing.includes(drag.value)){
-      showBig('این عضو تکراری است!');
-      setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} عضو مجموعهٔ ${setName} است؛ اما قبلاً قرار گرفته (تکراری).`);
-      // return original to its place (restore visibility)
       orig.style.visibility = 'visible';
       orig.classList.remove('fadeOut');
-      orig.classList.add('returnBack');
-      setTimeout(()=> orig.classList.remove('returnBack'), 300);
       return;
     }
-    // allowed move: remove orig from old parent and append to new
+
+    if(existing.includes(drag.value)){
+      showBig('این عضو تکراری است!');
+      setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} قبلاً در مجموعه قرار گرفته.`);
+      orig.style.visibility = 'visible';
+      orig.classList.remove('fadeOut');
+      return;
+    }
+
     orig.remove();
     orig.classList.remove('fadeOut');
     contentsEl.appendChild(orig);
-    // animate
     orig.classList.add('placed-anim');
+
     setTimeout(()=> orig.classList.remove('placed-anim'), 450);
+
     setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} حالا عضو مجموعهٔ ${setName} است.`);
     return;
   }
 
-  // origin is tray (placing fresh from tray)
-  // duplicate check
   if(existing.includes(drag.value)){
     showBig('این عضو تکراری است!');
-    setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} عضو مجموعهٔ ${setName} است؛ اما قبلاً قرار گرفته (تکراری).`);
+    setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} قبلاً در این مجموعه قرار گرفته.`);
     updateScore(-10);
-    // return tray card visible
+
     const trayCard = document.getElementById(drag.dragId);
     if(trayCard){ trayCard.style.visibility = 'visible'; trayCard.classList.remove('fadeOut'); }
     return;
   }
 
-  // membership check
   if(!sets[setName].includes(drag.value)){
     showBig('دقت کن! این عضو داخل این مجموعه نیست');
-    setMessage(`${drag.value} ∉ ${setName}`, `${drag.value} عضو مجموعهٔ ${setName} نیست؛ اشتباه کردی، بیشتر تلاش کن.`);
+    setMessage(`${drag.value} ∉ ${setName}`, `${drag.value} عضو این مجموعه نیست.`);
     updateScore(-10);
-    // return tray card visible
+
     const trayCard = document.getElementById(drag.dragId);
     if(trayCard){ trayCard.style.visibility = 'visible'; trayCard.classList.remove('fadeOut'); }
     return;
   }
 
-  // correct placement: create placed element inside this set, remove original tray card
   const placed = document.createElement('div');
   placed.className = 'placed placed-anim';
   placed.textContent = drag.value;
@@ -235,19 +222,20 @@ function handleDrop(drag, box, evt){
   placed.id = 'placed-' + (++placedIdCounter);
   placed.setAttribute('draggable','true');
 
-  // dragstart for placed (so user can move it later)
   placed.addEventListener('dragstart', e=>{
     e.dataTransfer.setData('value', placed.dataset.value);
     e.dataTransfer.setData('origin','placed');
     e.dataTransfer.setData('dragId', placed.id);
-    // hide while dragging
     placed.classList.add('fadeOut');
     setTimeout(()=> placed.style.visibility = 'hidden', 150);
   });
 
   contentsEl.appendChild(placed);
 
-  // remove original tray card (by id) after a short delay (to allow fade)
+  /* ★★ افکت نور سبز هنگام قرارگیری درست ★★ */
+  placed.classList.add("card-green-glow");
+  setTimeout(()=> placed.classList.remove("card-green-glow"), 650);
+
   const trayCard = document.getElementById(drag.dragId);
   if(trayCard) trayCard.remove();
 
@@ -256,25 +244,8 @@ function handleDrop(drag, box, evt){
   setTimeout(()=> box.classList.remove('glow-success'), 600);
 
   updateScore(+10);
-  return;
 }
 
-/* ---------- resetCard function (if needed) ---------- */
-function resetCard(evt){
-  const dragId = evt.dataTransfer.getData('dragId');
-  // try to restore tray card by id
-  if(dragId){
-    const el = document.getElementById(dragId);
-    if(el){
-      el.style.visibility = 'visible';
-      el.classList.remove('fadeOut');
-      return;
-    }
-  }
-  // fallback: nothing
-}
-
-/* ---------- allow dropping back to tray to "cancel" placed items (optional) ---------- */
 tray.addEventListener('dragover', e => e.preventDefault());
 tray.addEventListener('drop', e => {
   e.preventDefault();
@@ -282,12 +253,10 @@ tray.addEventListener('drop', e => {
   const dragId = e.dataTransfer.getData('dragId');
   const value = Number(e.dataTransfer.getData('value'));
 
-  // if dragging from placed -> remove it from set and re-create a tray card
   if(origin === 'placed'){
     const placedEl = document.getElementById(dragId);
     if(placedEl){
       placedEl.remove();
-      // recreate tray card (id new)
       const newId = 'tray-' + (Date.now());
       const card = document.createElement('div');
       card.className = 'card';
@@ -295,42 +264,23 @@ tray.addEventListener('drop', e => {
       card.dataset.value = value;
       card.draggable = true;
       card.textContent = value;
-      // ensure Persian digits for appearance:
-      // but we keep plain numbers — user can change if wants localized digits
-      // make draggable
+
       makeTrayCardDraggable(card);
       tray.appendChild(card);
     }
-  } else if(origin === 'tray'){
-    // if dropping a hidden tray card back to tray (cancel), simply restore visibility
+  } 
+  else if(origin === 'tray'){
     const el = document.getElementById(dragId);
     if(el){ el.style.visibility = 'visible'; el.classList.remove('fadeOut'); }
   }
 });
 
-/* ---------- initial helpers ---------- */
-function makeTrayCardDraggable(el){
-  el.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('value', el.dataset.value);
-    e.dataTransfer.setData('origin', 'tray');
-    e.dataTransfer.setData('dragId', el.id);
-    el.classList.add('fadeOut');
-    setTimeout(()=> el.style.visibility = 'hidden', 180);
-  });
-}
-document.querySelectorAll('#tray .card').forEach(el=>{
-  makeTrayCardDraggable(el);
-});
-
-/* ---------- keyboard/UX: allow clicking cards to "pick" (for touch) ---------- */
 document.querySelectorAll('.card').forEach(c=>{
-  c.addEventListener('click', e=>{
-    // simple behavior: highlight briefly
+  c.addEventListener('click', ()=>{
     c.style.transform = 'scale(1.06)';
     setTimeout(()=> c.style.transform = '', 180);
   });
 });
-
 </script>
 </body>
 </html>
