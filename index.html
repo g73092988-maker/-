@@ -181,6 +181,62 @@ function dropToBox(value,box,evt){
   const setName=box.dataset.set;
   const arr=Array.from(box.querySelectorAll('.placed')).map(x=>parseInt(x.dataset.value));
   const size=sets[setName].length;
+  const mathInfo = `|${setName}| = ${size}`;
+
+  if(arr.includes(value)){
+    showWarn("این عضو تکراری است!");
+    document.getElementById("message").innerHTML=
+      `<span class='rtl-fix'>${value} ∈ ${setName}</span> — عدد تکراری است!<br>${mathInfo}`;
+    score-=10; updateScore();
+    box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
+    resetCard(evt); return;
+  }
+
+  if(!sets[setName].includes(value)){
+    showWarn("خطا! عضو داخل این مجموعه نیست");
+    document.getElementById("message").innerHTML=
+      `<span class='rtl-fix'>${value} ∉ ${setName}</span> — این عضو در این مجموعه وجود ندارد!<br>${mathInfo}`;
+    score-=10; updateScore();
+    box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
+    resetCard(evt); return;
+  }
+
+  const placed=document.createElement("div");
+  placed.textContent=value;
+  placed.className="card placed";
+  placed.dataset.value=value;
+  placed.draggable=true;
+  placed.style.marginTop="10px";
+  placed.style.opacity="0";
+  placed.style.transform="scale(0.2)";
+  box.appendChild(placed);
+
+  setTimeout(()=>{
+    placed.style.opacity="1";
+    placed.style.transform="scale(1)";
+  },50);
+
+  placed.addEventListener('dragstart',e=>{
+    e.target.classList.add("fadeOut");
+    setTimeout(()=>e.target.style.visibility="hidden",200);
+    e.dataTransfer.setData("value",e.target.dataset.value);
+    e.dataTransfer.setData("from-set",setName);
+    e.dataTransfer.setData("placed", "true");
+    e.dataTransfer.setData("originalHTML", e.target.outerHTML);
+  });
+
+  document.getElementById("message").innerHTML=
+    `<span class='rtl-fix'>${value} ∈ ${setName}</span> — درست! عضو متعلق به مجموعه است.<br>${mathInfo}`;
+
+  box.classList.add('glow-success'); setTimeout(()=>box.classList.remove('glow-success'),500);
+
+  score+=10; updateScore();
+  total++;
+}
+(value,box,evt){
+  const setName=box.dataset.set;
+  const arr=Array.from(box.querySelectorAll('.placed')).map(x=>parseInt(x.dataset.value));
+  const size=sets[setName].length;
   const mathInfo = `<span class='math-text'>|${setName}| = ${size}</span>`;
 
   if(arr.includes(value)){
