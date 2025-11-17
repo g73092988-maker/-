@@ -33,15 +33,16 @@
    background:rgba(255,255,255,0.07);
    padding:20px;
    border-radius:18px;
-   min-width:180px;
+   min-width:200px;
    border:1px solid rgba(255,255,255,0.2);
    position:relative;
+   text-align:center;
  }
  .set-box.glow-success { box-shadow:0 0 20px #2ecc71; transition:0.4s; }
  .set-box.shake { animation:shake .3s; }
  @keyframes shake{0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-6px);}100%{transform:translateX(0);}}
 
- #message { margin-top:25px; font-size:22px; min-height:28px; }
+ #message { margin-top:25px; font-size:26px; min-height:28px; }
 
  .big-warning {
    position:fixed;
@@ -57,6 +58,23 @@
  @keyframes pop{0%{transform:scale(0.2);}100%{transform:scale(1);} }
 
  #scoreBox { margin-top:20px; font-size:26px; }
+ .rtl-fix { direction:ltr; unicode-bidi:embed; font-weight:bold; }
+
+ /* ✨ انیمیشن جدید برای نشستن کارت */
+ @keyframes dropIn {
+   0% { transform: translateY(-30px) scale(0.4); opacity:0; }
+   60% { transform: translateY(10px) scale(1.1); opacity:1; }
+   100% { transform: translateY(0) scale(1); }
+ }
+ .placed { animation: dropIn .45s ease-out; }
+
+ /* استایل ریاضی زیبا */
+ .math-text {
+   font-size:28px;
+   font-weight:bold;
+   color:#9cdcfe;
+   text-shadow:0 0 8px #1e90ff;
+ }
 
 </style>
 </head>
@@ -112,18 +130,22 @@ boxes.forEach(b=>{
 function dropToBox(value,box,evt){
   const setName=box.dataset.set;
   const arr=Array.from(box.querySelectorAll('.placed')).map(x=>parseInt(x.dataset.value));
+  const size=sets[setName].length;
+  const mathInfo = `<span class='math-text'>|${setName}| = ${size}</span>`;
 
   if(arr.includes(value)){
     showWarn("این عضو تکراری است!");
-    document.getElementById("message").textContent=`${value} ∈ ${setName} — ${value} عضو مجموعهٔ ${setName} است؛ اما قبلاً قرار گرفته (تکراری).`;
+    document.getElementById("message").innerHTML=
+      `<span class='math-text'>${value} ∈ ${setName}</span> — عدد تکراری است!<br>${mathInfo}`;
     score-=10; updateScore();
     box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
     resetCard(evt); return;
   }
 
   if(!sets[setName].includes(value)){
-    showWarn("دقت کن! این عضو داخل این مجموعه نیست");
-    document.getElementById("message").textContent=`${value} ∉ ${setName} — ${value} عضو مجموعهٔ ${setName} نیست؛ اشتباه کردی، بیشتر تلاش کن.`;
+    showWarn("خطا! عضو داخل این مجموعه نیست");
+    document.getElementById("message").innerHTML=
+      `<span class='math-text'>${value} ∉ ${setName}</span> — این عضو در این مجموعه وجود ندارد!<br>${mathInfo}`;
     score-=10; updateScore();
     box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
     resetCard(evt); return;
@@ -134,16 +156,11 @@ function dropToBox(value,box,evt){
   placed.className="card placed";
   placed.dataset.value=value;
   placed.style.marginTop="10px";
-  placed.style.opacity="0";
-  placed.style.transform="scale(0.2)";
   box.appendChild(placed);
 
-  setTimeout(()=>{
-    placed.style.opacity="1";
-    placed.style.transform="scale(1)";
-  },50);
+  document.getElementById("message").innerHTML=
+    `<span class='math-text'>${value} ∈ ${setName}</span> — درست! عضو متعلق به مجموعه است.<br>${mathInfo}`;
 
-  document.getElementById("message").textContent=`${value} ∈ ${setName} — ${value} عضو مجموعهٔ ${setName} است؛ آفرین!`;
   box.classList.add('glow-success'); setTimeout(()=>box.classList.remove('glow-success'),500);
 
   score+=10; updateScore();
@@ -153,9 +170,4 @@ function dropToBox(value,box,evt){
 function resetCard(evt){
   const original=evt.dataTransfer.getData("original");
   const temp=document.createElement("div"); temp.innerHTML=original;
-  const card=temp.firstChild; card.classList.remove("fadeOut"); card.style.visibility="visible";
-  document.querySelector('.cards').appendChild(card);
-}
-</script>
-</body>
-</html>
+  const card=temp
