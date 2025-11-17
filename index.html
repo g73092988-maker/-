@@ -1,286 +1,181 @@
+<!-- نسخه اصلاح‌شده با افکت شعله سبز هنگام قرارگیری کارت -->
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>مرحله ۱ — مجموعه‌ها در نبرد عناصر</title>
+<meta charset="UTF-8" />
+<title>مرحله ۱ - عضویت در مجموعه</title>
 <style>
-  :root{ --bg1:#0b0f14; --bg2:#0e141b; --card:#ffffff1f; --accent:#4fd6ff; --good:#2ecc71; --bad:#e74c3c; }
-  body{
-    margin:0; padding:24px; font-family: Vazirmatn, system-ui, sans-serif;
-    background: linear-gradient(180deg, var(--bg1), var(--bg2));
-    color:#e6edf3; text-align:center;
-  }
-  h1{ margin:6px 0 12px; font-size:20px; }
+ body {
+   font-family: "Vazirmatn", sans-serif;
+   background: linear-gradient(180deg,#0b0f14,#0e141b,#0b0f14);
+   color: #e6edf3;
+   margin: 0;
+   padding: 0;
+   text-align:center;
+ }
+ h1 { margin-top: 25px; }
 
-  #scoreBox{ font-size:20px; margin-bottom:12px; color:#9be7ff; position:relative; display:inline-block;}
-  .score-change{ position:absolute; top:-36px; right:-6px; padding:6px 10px; border-radius:10px; font-weight:700; opacity:0; transform:scale(.7); transition:all .28s ease; pointer-events:none;}
-  .score-change.show{ opacity:1; transform:scale(1.06); }
-  .score-change.plus{ background: rgba(46,204,113,0.95); color:#021; }
-  .score-change.minus{ background: rgba(231,76,60,0.95); color:#fff; }
+ .cards { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:30px; }
+ .card {
+   background: rgba(255,255,255,0.12);
+   border:1px solid rgba(255,255,255,0.18);
+   padding:18px 28px;
+   font-size:22px;
+   border-radius:40px;
+   cursor:grab;
+   transition:0.25s;
+   box-shadow:0 4px 12px rgba(0,0,0,0.4);
+ }
+ .card:hover { transform:scale(1.1); }
+ .card.fadeOut { opacity:0; transform: translateY(-10px); transition:0.4s ease; }
 
-  .sets-container{ display:flex; gap:18px; justify-content:center; margin:18px 0; flex-wrap:wrap; }
-  .set-box{
-    min-width:200px; padding:18px; border-radius:14px; border:1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.03); text-align:center; position:relative;
-  }
-  .set-box .set-title{ font-weight:700; margin-bottom:8px; }
-  .set-box.glow-success{ box-shadow:0 0 18px rgba(46,204,113,0.25); }
+ .sets-container { display:flex; gap:18px; justify-content:center; margin-top:20px; }
+ .set-box {
+   background:rgba(255,255,255,0.07);
+   padding:20px;
+   border-radius:18px;
+   min-width:200px;
+   border:3px solid rgba(0,255,120,0.35);
+   position:relative;
+   text-align:center;
+   animation:borderPulse 3s infinite ease-in-out;
+ }
 
-  .cards{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:20px 0; }
-  .card{
-    background: var(--card); padding:14px 20px; border-radius:36px; cursor:grab;
-    user-select:none; border:1px solid rgba(255,255,255,0.06); box-shadow:0 6px 18px rgba(0,0,0,0.45);
-    font-size:20px; min-width:52px; text-align:center;
-  }
-  .card:active{ cursor:grabbing; }
-  .card.fadeOut{ opacity:0; transform:translateY(-10px); transition:all .28s ease; visibility:hidden; }
+ /* افکت سبزِ لیزری هنگام قرارگیری کارت */
+ .green-flash {
+   position:absolute;
+   top:0; left:0; right:0; bottom:0;
+   pointer-events:none;
+   border-radius:18px;
+   box-shadow:0 0 25px 8px rgba(0,255,140,0.8) inset;
+   animation: flash 0.45s ease-out;
+   opacity:0;
+ }
+ @keyframes flash {
+   0% { opacity:0; }
+   30% { opacity:1; }
+   100% { opacity:0; }
+ }
 
-  .placed{ background: rgba(255,255,255,0.06); border-radius:10px; padding:8px 12px; display:inline-block; margin:6px 6px 0 0; }
-  .placed[draggable="true"]{ cursor:grab; }
+ #message { margin-top:25px; font-size:26px; min-height:28px; }
 
-  @keyframes shake{ 0%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-6px)}100%{transform:none} }
-  .shake{ animation:shake .36s; }
+ #scoreBox { margin-top:20px; font-size:26px; }
 
-  .big-warning{ position:fixed; left:50%; top:48%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.75); padding:20px 28px; border-radius:14px; display:none; font-size:20px; z-index:999; }
+ .math-text { direction:ltr; unicode-bidi:embed; font-weight:bold; font-size:24px; color:#4fd6ff; }
 
-  #message{ margin-top:18px; min-height:62px; font-size:16px; line-height:1.35; }
+ /* انیمیشن ورود کارت */
+ @keyframes dropIn {
+   0% { transform: scale(0.1) translateY(-20px); opacity:0; }
+   100% { transform: scale(1) translateY(0); opacity:1; }
+ }
+ .placed { animation: dropIn 0.35s ease-out; cursor:grab; }
 
-  .math-text{ direction:ltr; unicode-bidi:embed; display:block; font-weight:700; font-size:20px; color:var(--accent); text-shadow:0 0 8px rgba(30,144,255,0.15); margin-bottom:6px; }
+@keyframes borderPulse {
+  0% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
+  50% { box-shadow:0 0 18px rgba(0,255,140,0.55); border-color:rgba(0,255,120,0.55); }
+  100% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
+}
 
-  @keyframes dropIn { 0%{transform:translateY(-18px) scale(.6); opacity:0} 60%{transform:translateY(8px) scale(1.05); opacity:1} 100%{transform:translateY(0) scale(1);} }
-  .placed-anim{ animation: dropIn .42s cubic-bezier(.2,.9,.2,1); }
 
-  .tray{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
-  .set-contents{ min-height:80px; display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; padding-top:6px; }
-
-  /* ★★ افکت حلقه نور سبز ★★ */
-  @keyframes greenPulse {
-    0% { box-shadow: 0 0 0 rgba(0,255,120,0); }
-    40% { box-shadow: 0 0 22px rgba(0,255,120,0.9), 0 0 34px rgba(0,255,120,0.5); }
-    100% { box-shadow: 0 0 0 rgba(0,255,120,0); }
-  }
-  .card-green-glow {
-    animation: greenPulse 0.65s ease-out;
-    border-color: rgba(0,255,120,0.9) !important;
-  }
+/* Scanner animation for set boxes */
+.set-box {
+  position: relative;
+  overflow: hidden;
+}
+.set-box::after {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(0,255,100,0) 0%,
+    rgba(0,255,100,0.25) 50%,
+    rgba(0,255,100,0) 100%
+  );
+  animation: scan 2.5s linear infinite;
+}
+@keyframes scan {
+  0% { top: -100%; }
+  100% { top: 100%; }
+}
 
 </style>
 </head>
 <body>
-  <h1>مرحله ۱ — تشخیص عضویت (مجموعه‌ها)</h1>
+<h1>مرحله ۱ — آزمایش عضویت</h1>
+<div id="scoreBox">امتیاز: ۰</div>
 
-  <div id="scoreBox">امتیاز: <span id="scoreVal">0</span>
-    <div id="scoreChange" class="score-change" aria-hidden="true"></div>
-  </div>
+<div class="sets-container">
+  <div class="set-box" data-set="A">A = { 1 , 3 , 5 }</div>
+  <div class="set-box" data-set="B">B = { 3 , 4 , 5 }</div>
+  <div class="set-box" data-set="C">C = { 2 , 5 , 6 }</div>
+</div>
 
-  <div class="sets-container">
-    <div class="set-box" data-set="A">
-      <div class="set-title">A = { 1 , 3 , 5 }</div>
-      <div class="set-contents" data-set-contents="A"></div>
-    </div>
+<div class="cards">
+  <div class="card" draggable="true" data-value="1">۱</div>
+  <div class="card" draggable="true" data-value="2">۲</div>
+  <div class="card" draggable="true" data-value="3">۳</div>
+  <div class="card" draggable="true" data-value="3">۳</div>
+  <div class="card" draggable="true" data-value="4">۴</div>
+  <div class="card" draggable="true" data-value="5">۵</div>
+  <div class="card" draggable="true" data-value="5">۵</div>
+  <div class="card" draggable="true" data-value="5">۵</div>
+  <div class="card" draggable="true" data-value="6">۶</div>
+</div>
 
-    <div class="set-box" data-set="B">
-      <div class="set-title">B = { 3 , 4 , 5 }</div>
-      <div class="set-contents" data-set-contents="B"></div>
-    </div>
-
-    <div class="set-box" data-set="C">
-      <div class="set-title">C = { 2 , 5 , 6 }</div>
-      <div class="set-contents" data-set-contents="C"></div>
-    </div>
-  </div>
-
-  <div class="cards" id="tray">
-    <div class="card" draggable="true" id="tray-1" data-value="1">۱</div>
-    <div class="card" draggable="true" id="tray-2" data-value="2">۲</div>
-    <div class="card" draggable="true" id="tray-3" data-value="3">۳</div>
-    <div class="card" draggable="true" id="tray-4" data-value="3">۳</div>
-    <div class="card" draggable="true" id="tray-5" data-value="4">۴</div>
-    <div class="card" draggable="true" id="tray-6" data-value="5">۵</div>
-    <div class="card" draggable="true" id="tray-7" data-value="5">۵</div>
-    <div class="card" draggable="true" id="tray-8" data-value="5">۵</div>
-    <div class="card" draggable="true" id="tray-9" data-value="6">۶</div>
-  </div>
-
-  <div id="message"></div>
-  <div class="big-warning" id="bigWarn"></div>
+<div id="message"></div>
 
 <script>
-/* ---------- داده‌ها ---------- */
-const sets = { A: [1,3,5], B: [3,4,5], C: [2,5,6] };
-let score = 0;
-let placedIdCounter = 0;
+const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
+let score=0;
+function updateScore(){ document.getElementById("scoreBox").textContent=`امتیاز: ${score}`; }
 
-/* المان‌ها */
-const scoreValEl = document.getElementById('scoreVal');
-const scoreChangeEl = document.getElementById('scoreChange');
-const messageEl = document.getElementById('message');
-const bigWarn = document.getElementById('bigWarn');
-const tray = document.getElementById('tray');
-const setBoxes = document.querySelectorAll('.set-box');
-
-function showBig(msg){
-  bigWarn.textContent = msg;
-  bigWarn.style.display = 'block';
-  setTimeout(()=> bigWarn.style.display = 'none', 1200);
-}
-function updateScore(delta){
-  score += delta;
-  scoreValEl.textContent = score;
-  scoreChangeEl.textContent = (delta>0? '+'+delta : delta);
-  scoreChangeEl.className = 'score-change ' + (delta>0? 'plus show' : 'minus show');
-  setTimeout(()=> scoreChangeEl.className = 'score-change', 700);
-}
-function setMessage(mathLine, persian){
-  messageEl.innerHTML = `<span class="math-text" dir="ltr">${mathLine}</span><div style="margin-top:6px">${persian}</div>`;
+function addGreenFlash(box){
+  const fx=document.createElement("div");
+  fx.className="green-flash";
+  box.appendChild(fx);
+  setTimeout(()=>fx.remove(),500);
 }
 
-function makeTrayCardDraggable(el){
-  el.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('value', el.dataset.value);
-    e.dataTransfer.setData('origin','tray');
-    e.dataTransfer.setData('dragId', el.id);
-    el.classList.add('fadeOut');
-    setTimeout(()=> el.style.visibility = 'hidden', 180);
+const cards=document.querySelectorAll('.card');
+cards.forEach(c=>{
+  c.addEventListener('dragstart',e=>{
+    e.dataTransfer.setData("value",e.target.dataset.value);
   });
-}
-document.querySelectorAll('#tray .card').forEach(makeTrayCardDraggable);
+});
 
-document.querySelectorAll('.set-box').forEach(box=>{
-  box.addEventListener('dragover', e => e.preventDefault());
-  box.addEventListener('drop', e => {
+const boxes=document.querySelectorAll('.set-box');
+boxes.forEach(box=>{
+  box.addEventListener('dragover',e=>e.preventDefault());
+  box.addEventListener('drop',e=>{
     e.preventDefault();
-    const value = Number(e.dataTransfer.getData('value'));
-    const origin = e.dataTransfer.getData('origin');
-    const dragId = e.dataTransfer.getData('dragId');
-    handleDrop({value, origin, dragId}, box, e);
+    const value=parseInt(e.dataTransfer.getData("value"));
+    dropToBox(value,box);
   });
 });
 
-function handleDrop(drag, box, evt){
-  const setName = box.dataset.set;
-  const contentsEl = box.querySelector('.set-contents');
+function dropToBox(value,box){
+  const setName=box.dataset.set;
 
-  const existing = Array.from(contentsEl.querySelectorAll('.placed')).map(d => Number(d.dataset.value));
-
-  if(drag.origin === 'placed'){
-    const orig = document.getElementById(drag.dragId);
-    if(!orig) return;
-    const fromSet = orig.closest('.set-box')?.dataset?.set || null;
-
-    if(fromSet === setName){
-      setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} عضو مجموعهٔ ${setName} است (در همون مجموعه).`);
-      orig.style.visibility = 'visible';
-      orig.classList.remove('fadeOut');
-      return;
-    }
-
-    if(existing.includes(drag.value)){
-      showBig('این عضو تکراری است!');
-      setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} قبلاً در مجموعه قرار گرفته.`);
-      orig.style.visibility = 'visible';
-      orig.classList.remove('fadeOut');
-      return;
-    }
-
-    orig.remove();
-    orig.classList.remove('fadeOut');
-    contentsEl.appendChild(orig);
-    orig.classList.add('placed-anim');
-
-    setTimeout(()=> orig.classList.remove('placed-anim'), 450);
-
-    setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} حالا عضو مجموعهٔ ${setName} است.`);
+  if(!sets[setName].includes(value)){
+    document.getElementById("message").innerHTML=`<span class='math-text'>${value} ∉ ${setName}</span> — این عضو در این مجموعه نیست.`;
+    score-=5; updateScore();
     return;
   }
 
-  if(existing.includes(drag.value)){
-    showBig('این عضو تکراری است!');
-    setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} قبلاً در این مجموعه قرار گرفته.`);
-    updateScore(-10);
+  const placed=document.createElement("div");
+  placed.textContent=value;
+  placed.className="card placed";
+  placed.dataset.value=value;
+  box.appendChild(placed);
 
-    const trayCard = document.getElementById(drag.dragId);
-    if(trayCard){ trayCard.style.visibility = 'visible'; trayCard.classList.remove('fadeOut'); }
-    return;
-  }
+  addGreenFlash(box); // ⭐ افکت شعله سبز
 
-  if(!sets[setName].includes(drag.value)){
-    showBig('دقت کن! این عضو داخل این مجموعه نیست');
-    setMessage(`${drag.value} ∉ ${setName}`, `${drag.value} عضو این مجموعه نیست.`);
-    updateScore(-10);
-
-    const trayCard = document.getElementById(drag.dragId);
-    if(trayCard){ trayCard.style.visibility = 'visible'; trayCard.classList.remove('fadeOut'); }
-    return;
-  }
-
-  const placed = document.createElement('div');
-  placed.className = 'placed placed-anim';
-  placed.textContent = drag.value;
-  placed.dataset.value = drag.value;
-  placed.id = 'placed-' + (++placedIdCounter);
-  placed.setAttribute('draggable','true');
-
-  placed.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('value', placed.dataset.value);
-    e.dataTransfer.setData('origin','placed');
-    e.dataTransfer.setData('dragId', placed.id);
-    placed.classList.add('fadeOut');
-    setTimeout(()=> placed.style.visibility = 'hidden', 150);
-  });
-
-  contentsEl.appendChild(placed);
-
-  /* ★★ افکت نور سبز هنگام قرارگیری درست ★★ */
-  placed.classList.add("card-green-glow");
-  setTimeout(()=> placed.classList.remove("card-green-glow"), 650);
-
-  const trayCard = document.getElementById(drag.dragId);
-  if(trayCard) trayCard.remove();
-
-  setMessage(`${drag.value} ∈ ${setName}`, `${drag.value} عضو مجموعهٔ ${setName} است؛ آفرین!`);
-  box.classList.add('glow-success');
-  setTimeout(()=> box.classList.remove('glow-success'), 600);
-
-  updateScore(+10);
+  document.getElementById("message").innerHTML=`<span class='math-text'>${value} ∈ ${setName}</span> — درست!`;
+  score+=10; updateScore();
 }
-
-tray.addEventListener('dragover', e => e.preventDefault());
-tray.addEventListener('drop', e => {
-  e.preventDefault();
-  const origin = e.dataTransfer.getData('origin');
-  const dragId = e.dataTransfer.getData('dragId');
-  const value = Number(e.dataTransfer.getData('value'));
-
-  if(origin === 'placed'){
-    const placedEl = document.getElementById(dragId);
-    if(placedEl){
-      placedEl.remove();
-      const newId = 'tray-' + (Date.now());
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.id = newId;
-      card.dataset.value = value;
-      card.draggable = true;
-      card.textContent = value;
-
-      makeTrayCardDraggable(card);
-      tray.appendChild(card);
-    }
-  } 
-  else if(origin === 'tray'){
-    const el = document.getElementById(dragId);
-    if(el){ el.style.visibility = 'visible'; el.classList.remove('fadeOut'); }
-  }
-});
-
-document.querySelectorAll('.card').forEach(c=>{
-  c.addEventListener('click', ()=>{
-    c.style.transform = 'scale(1.06)';
-    setTimeout(()=> c.style.transform = '', 180);
-  });
-});
 </script>
 </body>
 </html>
