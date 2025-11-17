@@ -1,222 +1,188 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa">
 <head>
-<meta charset="UTF-8" />
-<title>مرحله ۱ - عضویت در مجموعه</title>
+<meta charset="UTF-8">
+<title>بازی مجموعه‌ها</title>
 <style>
- body {
-   font-family: "Vazirmatn", sans-serif;
-   background: linear-gradient(180deg,#0b0f14,#0e141b,#0b0f14);
-   color: #e6edf3;
-   margin: 0;
-   padding: 0;
-   text-align:center;
- }
- h1 { margin-top: 25px; }
+    body {
+        background: #0f0f0f;
+        font-family: sans-serif;
+        direction: rtl;
+        color: white;
+        overflow-x: hidden;
+    }
 
- /* کارت هنگام برداشته شدن محو شود */
- .card.fadeOut { opacity:0; transform: translateY(-10px); transition:0.4s ease; }
+    .cards {
+        display: flex;
+        gap: 10px;
+        margin: 20px;
+    }
 
- .cards { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:30px; }
- .card {
-   background: rgba(255,255,255,0.12);
-   border:1px solid rgba(255,255,255,0.18);
-   padding:18px 28px;
-   font-size:22px;
-   border-radius:40px;
-   cursor:grab;
-   transition:0.25s;
-   box-shadow:0 4px 12px rgba(0,0,0,0.4);
- }
- .card:hover { transform:scale(1.1); }
+    .card {
+        width: 60px;
+        height: 80px;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: grab;
+        box-shadow: 0 0 10px rgba(255,255,255,0.3);
+        transition: 0.3s;
+        font-size: 25px;
+    }
 
- .sets-container { display:flex; gap:18px; justify-content:center; margin-top:20px; }
- .set-box {
-   background:rgba(255,255,255,0.07);
-   padding:20px;
-   border-radius:18px;
-   min-width:180px;
-   border:1px solid rgba(255,255,255,0.2);
- }
- .set-box.glow-success { box-shadow:0 0 20px #2ecc71; transition:0.4s; }
+    .card:active {
+        cursor: grabbing;
+    }
 
- #message { margin-top:25px; font-size:22px; min-height:28px; }
+    .area {
+        width: 220px;
+        height: 160px;
+        background: rgba(255,255,255,0.12);
+        border: 2px dashed #fff;
+        border-radius: 15px;
+        margin: 25px;
+        padding: 10px;
+        transition: 0.3s;
+    }
 
- /* پنجره مرحله ۲ پایین صفحه */
- #nextStageBox {
-   position:fixed;
-   bottom:0; left:0; right:0;
-   background:rgba(255,255,255,0.08);
-   padding:25px;
-   border-top:1px solid rgba(255,255,255,0.2);
-   backdrop-filter:blur(5px);
-   display:none;
- }
- .choice-btn { padding:12px 25px; margin:5px; border-radius:12px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); cursor:pointer; }
- .choice-btn:hover { background:rgba(255,255,255,0.25); }
+    /* ویبره */
+    .shake {
+        animation: shake 0.4s;
+    }
+    @keyframes shake {
+        0% { transform: translate(0); }
+        25% { transform: translate(-5px); }
+        50% { transform: translate(5px); }
+        75% { transform: translate(-5px); }
+        100% { transform: translate(0); }
+    }
 
- /* پیام شروع مرحله بعد */
- #startScreen {
-   position:fixed;
-   inset:0;
-   background:rgba(0,0,0,0.65);
-   display:none;
-   align-items:center;
-   justify-content:center;
-   font-size:60px;
-   backdrop-filter:blur(4px);
- }
+    /* پیام بزرگ وسط صفحه */
+    #bigMessage {
+        position: fixed;
+        top: 50%;
+        right: 50%;
+        transform: translate(50%, -50%);
+        background: rgba(255,255,255,0.15);
+        padding: 25px 40px;
+        border-radius: 20px;
+        font-size: 30px;
+        text-align: center;
+        display: none;
+        animation: pop 0.5s;
+        backdrop-filter: blur(12px);
+    }
+
+    @keyframes pop {
+        0% { transform: translate(50%, -50%) scale(0.4); opacity: 0; }
+        100% { transform: translate(50%, -50%) scale(1); opacity: 1; }
+    }
+
 </style>
 </head>
 <body>
-<h1>مرحله ۱ — آزمایش عضویت</h1>
 
-<div class="sets-container">
-  <div class="set-box" data-set="A">A = { 1 , 3 , 5 }</div>
-  <div class="set-box" data-set="B">B = { 3 , 4 , 5 }</div>
-  <div class="set-box" data-set="C">C = { 2 , 5 , 6 }</div>
+<h2>مرحله ۱</h2>
+
+<div class="cards" id="cards">
+    <!-- NEW کارت‌ها -->
 </div>
 
-<div class="cards">
-  <div class="card" draggable="true" data-value="2">۲</div>
-  <div class="card" draggable="true" data-value="5">۵</div>
-  <div class="card" draggable="true" data-value="1">۱</div>
-  <div class="card" draggable="true" data-value="3">۳</div>
-  <div class="card" draggable="true" data-value="4">۴</div>
-  <div class="card" draggable="true" data-value="6">۶</div>
-  <div class="card" draggable="true" data-value="3">۳</div>
-  <div class="card" draggable="true" data-value="5">۵</div>
+<div style="display:flex;gap:20px">
+    <div class="area" id="A">A</div>
+    <div class="area" id="B">B</div>
 </div>
 
-<div id="message"></div>
-
-<div id="nextStageBox">
-  <h2>🎉 مرحله ۱ کامل شد! آماده‌ای؟</h2>
-  <button class="choice-btn" onclick="goNext(true)">بله ✔</button>
-  <button class="choice-btn" onclick="goNext(false)">خیر ✖</button>
-</div>
-
-<div id="startScreen">بزن بریم! 🚀</div>
+<div id="bigMessage"></div>
 
 <script>
-const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
-let total=0;
-let draggedCard=null;
-let lastPosition={};
+/* NEW کارت‌ها مطابق درخواست */
+let cardNumbers = [1,2,3,3,4,5,5,5,6];
 
-// پیام پاپ‌آپ وسط صفحه
-function showPopup(msg){
-  let box=document.createElement("div");
-  box.textContent=msg;
-  box.style.position="fixed";
-  box.style.top="50%";
-  box.style.left="50%";
-  box.style.transform="translate(-50%,-50%)";
-  box.style.padding="25px 45px";
-  box.style.background="rgba(255,255,255,0.15)";
-  box.style.border="1px solid rgba(255,255,255,0.4)";
-  box.style.backdropFilter="blur(6px)";
-  box.style.fontSize="32px";
-  box.style.borderRadius="18px";
-  box.style.animation="shake 0.4s";
-  document.body.appendChild(box);
-  setTimeout(()=>box.remove(),1200);
-}
-
-// انیمیشن ویبره
-const style=document.createElement('style');
-style.textContent=`
-@keyframes shake { 0%{transform:translate(-50%,-50%) rotate(0);} 25%{transform:translate(-48%,-50%) rotate(2deg);} 50%{transform:translate(-50%,-50%) rotate(0);} 75%{transform:translate(-52%,-50%) rotate(-2deg);} 100%{transform:translate(-50%,-50%) rotate(0);} }
-.setError { animation: shake 0.4s; }
-`;
-document.head.appendChild(style);
-
-// فعال‌سازی درگ
-const cards=document.querySelectorAll('.card');
-cards.forEach(c=>{
-  c.addEventListener('dragstart',e=>{
-    draggedCard=e.target;
-    lastPosition[e.target.dataset.value]=e.target;
-    e.target.classList.add("fadeOut");
-    setTimeout(()=>e.target.style.visibility="hidden",300);
-    e.dataTransfer.setData("value",e.target.dataset.value);
-  });
+/* ساخت کارت‌ها */
+const cardBox = document.getElementById("cards");
+cardNumbers.forEach((num, index) => {
+    let c = document.createElement("div");
+    c.className = "card";
+    c.innerText = num;
+    c.draggable = true;
+    c.id = "card" + index;
+    cardBox.appendChild(c);
 });
 
-const boxes=document.querySelectorAll('.set-box');
-boxes.forEach(b=>{
-  b.addEventListener('dragover',e=>e.preventDefault());
-  b.addEventListener('drop',e=>{
-    e.preventDefault();
-    dropToBox(parseInt(e.dataTransfer.getData("value")),b);
-  });
+/* داده‌های مجموعه‌ها */
+let setA = [];
+let setB = [];
+
+/* پیام بزرگ */
+function showBig(msg) {
+    let box = document.getElementById("bigMessage");
+    box.innerText = msg;
+    box.style.display = "block";
+    setTimeout(()=> box.style.display="none", 1100);
+}
+
+/* زمانی که کارت رها می‌شود */
+document.querySelectorAll(".card").forEach(card => {
+
+    card.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("id", card.id);
+    });
 });
 
-function dropToBox(value,box){
-  const s=box.dataset.set;
+/* دراپ روی مجموعه‌ها */
+document.querySelectorAll(".area").forEach(area => {
 
-  // جلوگیری از ورود اشتباه
-  if(!sets[s].includes(value)){
-    showPopup("دقت کن! عضو این مجموعه نیست");
-    box.classList.add('setError');
-    setTimeout(()=>box.classList.remove('setError'),400);
-    resetCard(value);
-    return;
-  }
+    area.addEventListener("dragover", e => e.preventDefault());
 
-  // جلوگیری از تکراری بودن عدد
-  const exists=[...box.querySelectorAll('.card')].some(el=>parseInt(el.textContent)==value);
-  if(exists){
-    showPopup("این عدد قبلاً گذاشته شده!");
-    box.classList.add('setError');
-    setTimeout(()=>box.classList.remove('setError'),400);
-    resetCard(value);
-    return;
-  }
+    area.addEventListener("drop", e => {
 
-  // قرار دادن صحیح
-  const placed=document.createElement("div");
-  placed.textContent=value;
-  placed.className="card";
-  placed.style.marginTop="10px";
-  placed.style.opacity="0";
-  box.appendChild(placed);
-  setTimeout(()=>placed.style.opacity="1",50);
+        let id = e.dataTransfer.getData("id");
+        let card = document.getElementById(id);
+        let value = parseInt(card.innerText);
 
-  check(value,box);
-  total++;
-  if(total===8) document.getElementById("nextStageBox").style.display="block";
-}
+        // بررسی مکان فعلی
+        let targetSet = area.id === "A" ? setA : setB;
 
-// برگرداندن کارت به جای قبلی
-function resetCard(value){
-  let original=lastPosition[value];
-  if(original){
-    original.style.visibility="visible";
-    original.classList.remove('fadeOut');
-  }
-}
+        // ۱ ـــــــــــ کارت قبلاً داخل این مجموعه بوده
+        if (targetSet.includes(value)) {
+            area.classList.add("shake");
+            showBig("این عدد تکراریه!");
+            setTimeout(()=> area.classList.remove("shake"), 400);
+            return;
+        }
 
-function check(value,box){
-  const s=box.dataset.set;
-  if(sets[s].includes(value)){
-    message.textContent=`${value} ∈ ${s} — عالی! عضو مجموعه است ✨`;
-    box.classList.add('glow-success');
-    setTimeout(()=>box.classList.remove('glow-success'),500);
-  } else {
-    message.textContent=`${value} ∉ ${s} — عضو این مجموعه نیست ❌`;
-  }
-}
+        // ۲ ـــــــــــ اگر کارت مربوط به این مجموعه نبود (طبق شرط مثال شما: 3 ∈ A و 7 ∉ B)
+        if (area.id === "A" && value !== 3) {
+            area.classList.add("shake");
+            showBig("دقت کن!");
+            return;
+        }
+        if (area.id === "B" && value === 7) {
+            area.classList.add("shake");
+            showBig("دقت کن!");
+            return;
+        }
 
-function goNext(yes){
-  if(yes){
-    document.getElementById("startScreen").style.display="flex";
-    setTimeout(()=>{ document.getElementById("startScreen").style.opacity="0"; },1200);
-  } else {
-    const again=confirm("میخوای دوباره امتحان کنی؟");
-    if(again) location.reload();
-  }
-}
+        // اگر همه‌چیز درست بود → اضافه کن
+        targetSet.push(value);
+
+        // انیمیشن محو شدن کارت
+        card.style.transition = "0.5s";
+        card.style.opacity = "0";
+        card.style.transform = "translateY(20px)";
+        setTimeout(() => card.remove(), 500);
+
+        area.style.boxShadow = "0 0 15px lime";
+        setTimeout(()=> area.style.boxShadow="none", 600);
+
+    });
+
+});
 </script>
+
 </body>
 </html>
