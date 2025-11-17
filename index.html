@@ -76,6 +76,30 @@
    text-shadow:0 0 8px #1e90ff;
  }
 
+  /* استایل زیباتر برای متن‌های ریاضی */
+  .math-text {
+    direction:ltr;
+    unicode-bidi:embed;
+    font-weight:bold;
+    font-size:24px;
+    color:#7dd3fc;
+    text-shadow:0 0 8px #0ea5e9;
+    display:inline-block;
+    margin:6px 0;
+  }
+
+  /* انیمیشن انتقالی آرام کارت هنگام نشستن داخل مجموعه */
+  .placed-anim {
+    animation: dropIn 0.45s ease;
+  }
+  @keyframes dropIn {
+    0% { transform: translateY(-25px) scale(0.6); opacity:0; }
+    100% { transform: translateY(0px) scale(1); opacity:1; }
+  }
+
+  /* اجازه جابه‌جایی کارت‌های قرارگرفته */
+  .placed { cursor:grab; }
+
 </style>
 </head>
 <body>
@@ -135,7 +159,7 @@ function dropToBox(value,box,evt){
 
   if(arr.includes(value)){
     showWarn("این عضو تکراری است!");
-    document.getElementById("message").innerHTML=
+    document.getElementById("message").innerHTML = `<span class='math-text'>${value} ∈ ${setName}</span> — درست! عضو متعلق به مجموعه است.<br><span class='math-text'>|${setName}| = ${size}</span>`;
       `<span class='math-text'>${value} ∈ ${setName}</span> — عدد تکراری است!<br>${mathInfo}`;
     score-=10; updateScore();
     box.classList.add('shake'); setTimeout(()=>box.classList.remove('shake'),400);
@@ -153,10 +177,20 @@ function dropToBox(value,box,evt){
 
   const placed=document.createElement("div");
   placed.textContent=value;
+  placed.className="card placed placed-anim";("div");
+  placed.textContent=value;
   placed.className="card placed";
   placed.dataset.value=value;
   placed.style.marginTop="10px";
   box.appendChild(placed);
+
+  /* فعال کردن قابلیت جابه‌جایی کارت بعد از قرار گرفتن */
+  placed.setAttribute("draggable","true");
+  placed.addEventListener("dragstart", ev => {
+    ev.dataTransfer.setData("value", placed.dataset.value);
+    placed.classList.add("fadeOut");
+    setTimeout(()=>placed.style.visibility="hidden",200);
+  });
 
   document.getElementById("message").innerHTML=
     `<span class='math-text'>${value} ∈ ${setName}</span> — درست! عضو متعلق به مجموعه است.<br>${mathInfo}`;
