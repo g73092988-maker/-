@@ -1,4 +1,3 @@
-<!-- نسخه اصلاح‌شده با افکت شعله سبز هنگام قرارگیری کارت -->
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -28,6 +27,12 @@
  }
  .card:hover { transform:scale(1.1); }
  .card.fadeOut { opacity:0; transform: translateY(-10px); transition:0.4s ease; }
+ .placed { animation: dropIn 0.35s ease-out; cursor:grab; }
+
+ @keyframes dropIn {
+   0% { transform: scale(0.1) translateY(-20px); opacity:0; }
+   100% { transform: scale(1) translateY(0); opacity:1; }
+ }
 
  .sets-container { display:flex; gap:18px; justify-content:center; margin-top:20px; }
  .set-box {
@@ -39,9 +44,30 @@
    position:relative;
    text-align:center;
    animation:borderPulse 3s infinite ease-in-out;
+   overflow:hidden;
  }
 
- /* افکت سبزِ لیزری هنگام قرارگیری کارت */
+ @keyframes borderPulse {
+  0% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
+  50% { box-shadow:0 0 18px rgba(0,255,140,0.55); border-color:rgba(0,255,120,0.55); }
+  100% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
+ }
+
+ /* Scanner */
+ .set-box::after {
+   content: "";
+   position:absolute;
+   top:-100%; left:0;
+   width:100%; height:100%;
+   background: linear-gradient(rgba(0,255,100,0) 0%, rgba(0,255,100,0.25) 50%, rgba(0,255,100,0) 100%);
+   animation: scan 2.5s linear infinite;
+ }
+ @keyframes scan {
+   0% { top:-100%; }
+   100% { top:100%; }
+ }
+
+ /* Green flash */
  .green-flash {
    position:absolute;
    top:0; left:0; right:0; bottom:0;
@@ -58,49 +84,44 @@
  }
 
  #message { margin-top:25px; font-size:26px; min-height:28px; }
-
  #scoreBox { margin-top:20px; font-size:26px; }
-
  .math-text { direction:ltr; unicode-bidi:embed; font-weight:bold; font-size:24px; color:#4fd6ff; }
 
- /* انیمیشن ورود کارت */
- @keyframes dropIn {
-   0% { transform: scale(0.1) translateY(-20px); opacity:0; }
-   100% { transform: scale(1) translateY(0); opacity:1; }
+ /* پایان مرحله */
+ #overlay {
+   position:fixed;
+   top:0; left:0;
+   width:100%; height:100%;
+   background:rgba(0,0,0,0.7);
+   backdrop-filter: blur(5px);
+   display:none;
+   justify-content:center;
+   align-items:center;
+   z-index:9999;
  }
- .placed { animation: dropIn 0.35s ease-out; cursor:grab; }
-
-@keyframes borderPulse {
-  0% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
-  50% { box-shadow:0 0 18px rgba(0,255,140,0.55); border-color:rgba(0,255,120,0.55); }
-  100% { box-shadow:0 0 0px rgba(0,255,140,0.2); border-color:rgba(0,255,120,0.25); }
-}
-
-
-/* Scanner animation for set boxes */
-.set-box {
-  position: relative;
-  overflow: hidden;
-}
-.set-box::after {
-  content: "";
-  position: absolute;
-  top: -100%;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    rgba(0,255,100,0) 0%,
-    rgba(0,255,100,0.25) 50%,
-    rgba(0,255,100,0) 100%
-  );
-  animation: scan 2.5s linear infinite;
-}
-@keyframes scan {
-  0% { top: -100%; }
-  100% { top: 100%; }
-}
-
+ #endBox {
+   background:#0f1724;
+   padding:40px 55px;
+   border-radius:22px;
+   box-shadow:0 0 25px rgba(0,255,120,0.45);
+   text-align:center;
+   animation: pop 0.35s ease;
+ }
+ @keyframes pop {
+   0% { transform:scale(0.3); opacity:0; }
+   100% { transform:scale(1); opacity:1; }
+ }
+ .btn {
+   margin-top:22px;
+   padding:14px 32px;
+   border-radius:14px;
+   font-size:20px;
+   cursor:pointer;
+   border:none;
+   margin-left:10px;
+ }
+ .yes { background:#00ff9a; }
+ .no { background:#ff3b3b; }
 </style>
 </head>
 <body>
@@ -113,7 +134,7 @@
   <div class="set-box" data-set="C">C = { 2 , 5 , 6 }</div>
 </div>
 
-<div class="cards">
+<div class="cards" id="cardArea">
   <div class="card" draggable="true" data-value="1">۱</div>
   <div class="card" draggable="true" data-value="2">۲</div>
   <div class="card" draggable="true" data-value="3">۳</div>
@@ -121,15 +142,27 @@
   <div class="card" draggable="true" data-value="4">۴</div>
   <div class="card" draggable="true" data-value="5">۵</div>
   <div class="card" draggable="true" data-value="5">۵</div>
-  <div class="card" draggable="true" data-value="5">۵</div>
+  <div class="card" draggable="true" data-value="۵">۵</div>
   <div class="card" draggable="true" data-value="6">۶</div>
 </div>
 
 <div id="message"></div>
 
+<!-- پایان مرحله -->
+<div id="overlay">
+  <div id="endBox">
+    <h2>🎉 مرحله ۱ با موفقیت کامل شد!</h2>
+    <p>آماده‌ای برای مرحله ۲؟</p>
+    <button class="btn yes" onclick="nextLevel()">بزن بریم</button>
+    <button class="btn no" onclick="retry()">دوباره امتحان می‌کنم</button>
+  </div>
+</div>
+
 <script>
 const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
 let score=0;
+let placedCount=0;
+
 function updateScore(){ document.getElementById("scoreBox").textContent=`امتیاز: ${score}`; }
 
 function addGreenFlash(box){
@@ -143,6 +176,7 @@ const cards=document.querySelectorAll('.card');
 cards.forEach(c=>{
   c.addEventListener('dragstart',e=>{
     e.dataTransfer.setData("value",e.target.dataset.value);
+    e.dataTransfer.setData("origin","card");
   });
 });
 
@@ -152,30 +186,50 @@ boxes.forEach(box=>{
   box.addEventListener('drop',e=>{
     e.preventDefault();
     const value=parseInt(e.dataTransfer.getData("value"));
-    dropToBox(value,box);
+    const origin=e.dataTransfer.getData("origin");
+    dropToBox(value,box,origin,e);
   });
 });
 
-function dropToBox(value,box){
+function dropToBox(value,box,origin,evt){
   const setName=box.dataset.set;
 
+  // ❌ عضو داخل مجموعه نیست
   if(!sets[setName].includes(value)){
-    document.getElementById("message").innerHTML=`<span class='math-text'>${value} ∉ ${setName}</span> — این عضو در این مجموعه نیست.`;
+    showBigMessage(`عدد ${value} در مجموعه ${setName} وجود ندارد!`);
     score-=5; updateScore();
     return;
   }
 
+  // درست است → اضافه کن
   const placed=document.createElement("div");
   placed.textContent=value;
   placed.className="card placed";
   placed.dataset.value=value;
   box.appendChild(placed);
 
-  addGreenFlash(box); // ⭐ افکت شعله سبز
+  addGreenFlash(box);
 
+  placedCount++;
   document.getElementById("message").innerHTML=`<span class='math-text'>${value} ∈ ${setName}</span> — درست!`;
   score+=10; updateScore();
+
+  if(placedCount===9){ endLevel(); }
 }
-</script>
-</body>
-</html>
+
+/* پیام بزرگ */
+function showBigMessage(msg){
+  const ov=document.getElementById("overlay");
+  document.querySelector("#endBox h2").innerHTML=msg;
+  document.querySelector("#endBox p").style.display="none";
+  document.querySelector(".yes").style.display="none";
+  document.querySelector(".no").style.display="none";
+  ov.style.display="flex";
+  setTimeout(()=>{ ov.style.display="none"; },2000);
+}
+
+/* پایان مرحله */
+function endLevel(){
+  const ov=document.getElementById("overlay");
+  document.querySelector("#endBox h2").innerHTML="🎉 مرحله ۱ با موفقیت کامل شد!";
+  document.query
