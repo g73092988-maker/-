@@ -101,10 +101,42 @@
 <script>
 const sets={A:[1,3,5],B:[3,4,5],C:[2,5,6]};
 let total=0;
+let draggedCard=null;
+let lastPosition={};
 
+// پیام پاپ‌آپ وسط صفحه
+function showPopup(msg){
+  let box=document.createElement("div");
+  box.textContent=msg;
+  box.style.position="fixed";
+  box.style.top="50%";
+  box.style.left="50%";
+  box.style.transform="translate(-50%,-50%)";
+  box.style.padding="25px 45px";
+  box.style.background="rgba(255,255,255,0.15)";
+  box.style.border="1px solid rgba(255,255,255,0.4)";
+  box.style.backdropFilter="blur(6px)";
+  box.style.fontSize="32px";
+  box.style.borderRadius="18px";
+  box.style.animation="shake 0.4s";
+  document.body.appendChild(box);
+  setTimeout(()=>box.remove(),1200);
+}
+
+// انیمیشن ویبره
+const style=document.createElement('style');
+style.textContent=`
+@keyframes shake { 0%{transform:translate(-50%,-50%) rotate(0);} 25%{transform:translate(-48%,-50%) rotate(2deg);} 50%{transform:translate(-50%,-50%) rotate(0);} 75%{transform:translate(-52%,-50%) rotate(-2deg);} 100%{transform:translate(-50%,-50%) rotate(0);} }
+.setError { animation: shake 0.4s; }
+`;
+document.head.appendChild(style);
+
+// فعال‌سازی درگ
 const cards=document.querySelectorAll('.card');
 cards.forEach(c=>{
   c.addEventListener('dragstart',e=>{
+    draggedCard=e.target;
+    lastPosition[e.target.dataset.value]=e.target;
     e.target.classList.add("fadeOut");
     setTimeout(()=>e.target.style.visibility="hidden",300);
     e.dataTransfer.setData("value",e.target.dataset.value);
@@ -120,57 +152,49 @@ boxes.forEach(b=>{
   });
 });
 
-function dropToBox(value, box){
-  const s = box.dataset.set;
+function dropToBox(value,box){
+  const s=box.dataset.set;
 
-  // جلوگیری از تکرار قرارگیری عدد
-  let repeated = false;
-  box.querySelectorAll('.placed').forEach(p=>{ if(parseInt(p.textContent)===value) repeated = true; });
-
-  if(repeated){
-    message.textContent = `⚠ عدد ${value} قبلاً در مجموعه ${s} قرار گرفته است — دقت کن!`;
-    box.classList.add('shake');
-    setTimeout(()=>box.classList.remove('shake'),350);
-    restoreCard(value);
-    return;
-  }
-
-  // بررسی درست یا غلط بودن انتخاب
+  // جلوگیری از ورود اشتباه
   if(!sets[s].includes(value)){
-    message.textContent = `${value} ∉ ${s} — عضو این مجموعه نیست ❌`;
-    box.classList.add('shake');
-    setTimeout(()=>box.classList.remove('shake'),350);
-    restoreCard(value);
+    showPopup("دقت کن! عضو این مجموعه نیست");
+    box.classList.add('setError');
+    setTimeout(()=>box.classList.remove('setError'),400);
+    resetCard(value);
     return;
   }
 
-  // ایجاد کارت قرار گرفته
-  const placed = document.createElement("div");
-  placed.textContent = value;
-  placed.className = "card placed";
-  placed.style.marginTop = "10px";
-  placed.style.opacity = "0";
+  // جلوگیری از تکراری بودن عدد
+  const exists=[...box.querySelectorAll('.card')].some(el=>parseInt(el.textContent)==value);
+  if(exists){
+    showPopup("این عدد قبلاً گذاشته شده!");
+    box.classList.add('setError');
+    setTimeout(()=>box.classList.remove('setError'),400);
+    resetCard(value);
+    return;
+  }
+
+  // قرار دادن صحیح
+  const placed=document.createElement("div");
+  placed.textContent=value;
+  placed.className="card";
+  placed.style.marginTop="10px";
+  placed.style.opacity="0";
   box.appendChild(placed);
-  setTimeout(()=>placed.style.opacity="1",80);
+  setTimeout(()=>placed.style.opacity="1",50);
 
-  // پیام عضویت صحیح
-  message.textContent = `${value} ∈ ${s} — عالی! عضو مجموعه است ✨`;
-  box.classList.add('glow-success');
-  setTimeout(()=>box.classList.remove('glow-success'),500);
-
+  check(value,box);
   total++;
-  if(total===8) document.getElementById("nextStageBox").style.display = "block";
+  if(total===8) document.getElementById("nextStageBox").style.display="block";
 }
 
-function restoreCard(value){
-  const cards = document.querySelectorAll('.card');
-  cards.forEach(c=>{
-    if(parseInt(c.dataset.value)===value && c.style.visibility==="hidden"){
-      c.style.visibility = "visible";
-      c.classList.remove("fadeOut");
-    }
-  });
-}) document.getElementById("nextStageBox").style.display="block";
+// برگرداندن کارت به جای قبلی
+function resetCard(value){
+  let original=lastPosition[value];
+  if(original){
+    original.style.visibility="visible";
+    original.classList.remove('fadeOut');
+  }
 }
 
 function check(value,box){
