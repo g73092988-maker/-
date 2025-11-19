@@ -103,7 +103,6 @@
   <p id="introText" style="font-size:22px; margin-top:10px; color:#80ffd8; font-weight:bold; text-shadow:0 0 12px rgba(0,255,140,0.55);">
     قوانین مجموعه‌ها نوشته شده‌اند… اکنون نوبت توست کارتِ قدرت را در جای حقیقی‌اش بنشانی و تعادل عناصر را برقرار کنی.
   </p>
-  <!-- <<< تا اینجا فقط همین یک بخش اضافه شد — بقیه کد دست‌نخورده است >>> -->
 
   <div id="scoreBox">امتیاز: <span id="scoreVal">0</span>
     <span id="scoreChange" class="score-change"></span>
@@ -273,7 +272,7 @@ function returnPlacedToTray(placedEl){
   makeTrayCardDraggable(card);
   tray.appendChild(card);
 
-  setMessage(`${val} ∉ tray`, `کارت بازگشت به سینی.`);
+  // NOTE: per request, do NOT show "کارت بازگشت به سینی." message here
 }
 
 /* drop handlers for set boxes */
@@ -313,7 +312,7 @@ tray.addEventListener('drop', e => {
       card.textContent = value;
       makeTrayCardDraggable(card);
       tray.appendChild(card);
-      setMessage(`${value} ∉ tray`, `کارت بازگشت به سینی.`);
+      // NOTE: per request, do NOT show "کارت بازگشت به سینی." message here
     }
   } else if(origin === 'tray'){
     // restore hidden tray card if user canceled dropping
@@ -322,7 +321,6 @@ tray.addEventListener('drop', e => {
   }
 });
 
-/* handle drop into a set box */
 function handleDropToSet(drag, box){
   const setName = box.dataset.set;
   const contentsEl = box.querySelector('.set-contents');
@@ -481,7 +479,7 @@ document.addEventListener('keydown', e=>{
 });
 
 /* init message */
-setMessage('هدف: قرار دادن اعضای درست در مجموعه‌ها', 'هر کارت را بکش و روی مجموعه مناسب رها کن. کارت‌های داخل مجموعه را هم می‌توانی بکشیده یا کلیک کنی تا برگردند به سینی.');
+setMessage('هدف: قرار دادن اعضای درست در مجموعه‌ها', 'هر کارت را بکش و روی مجموعه مناسب رها کن.');
 </script>
 </body>
 </html>
