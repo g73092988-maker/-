@@ -1,4 +1,3 @@
-<!-- نسخهٔ کامل HTML با اصلاحات درخواستی -->
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -17,6 +16,7 @@
   }
   h1{ margin:6px 0 12px; font-size:20px; }
 
+  /* score */
   #scoreBox{ font-size:18px; margin-bottom:12px; color:#9be7ff; display:inline-block; }
   .score-change{ display:inline-block; margin-left:12px; padding:6px 10px; border-radius:10px; font-weight:700; opacity:0; transform:scale(.8); transition:all .28s ease; }
   .score-change.show{ opacity:1; transform:scale(1); }
@@ -30,30 +30,78 @@
   }
   .set-title{ font-weight:700; margin-bottom:8px; }
 
+  /* scanner vertical */
+  .set-box::after{
+    content:""; position:absolute; left:0; top:-120%; width:100%; height:60%;
+    background: linear-gradient(180deg, rgba(0,255,120,0) 0%, rgba(0,255,120,0.18) 50%, rgba(0,255,120,0) 100%);
+    animation: scan 2.6s linear infinite; pointer-events:none;
+  }
+  @keyframes scan{ 0%{top:-120%} 100%{top:160%} }
+
+  /* cards tray */
+  .cards{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:18px 0; }
   .card{
     background: var(--card); padding:12px 18px; border-radius:32px; cursor:grab; user-select:none;
     border:1px solid rgba(255,255,255,0.06); box-shadow:0 6px 18px rgba(0,0,0,0.45); font-size:20px; min-width:52px; text-align:center;
     transition: transform .12s ease;
   }
+  .card:active{ cursor:grabbing; }
   .card.fadeOut{ opacity:0; transform:translateY(-8px); transition:all .22s ease; visibility:hidden; }
 
+  /* placed style */
   .placed{ background: rgba(255,255,255,0.05); border-radius:10px; padding:8px 12px; display:inline-block; margin:6px 6px 0 0; cursor:grab; }
   .placed-anim{ animation: dropIn .36s cubic-bezier(.2,.9,.2,1); }
-
   @keyframes dropIn{ 0%{transform:translateY(-14px) scale(.85); opacity:0} 60%{transform:translateY(6px) scale(1.03); opacity:1} 100%{transform:none} }
+
+  /* green glow when placed */
+  @keyframes greenPulse { 0%{box-shadow:0 0 0 rgba(0,255,120,0)} 40%{box-shadow:0 0 22px rgba(0,255,120,0.9),0 0 34px rgba(0,255,120,0.45)} 100%{box-shadow:0 0 0 rgba(0,255,120,0)} }
+  .card-green-glow{ animation: greenPulse .7s ease-out; border-color: rgba(0,255,120,0.9) !important; }
+
+  /* shake */
+  @keyframes shake{0%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-6px)}100%{transform:none}}
+  .shake{ animation:shake .36s; }
 
   #message{ margin-top:18px; min-height:56px; font-size:16px; line-height:1.35; }
   .math-text{ direction:ltr; unicode-bidi:embed; display:block; font-weight:700; font-size:18px; color:var(--accent); margin-bottom:6px; }
 
-  /* مخفی کردن پیام اولیه */
-  #startHint{ display:none; }
+  /* big warning overlay (for errors like تکراری or not member) */
+  #bigWarn{
+    position:fixed; left:50%; top:46%; transform:translate(-50%,-50%); z-index:9998;
+    display:none; min-width:320px; background:rgba(10,10,10,0.9); padding:22px 28px; border-radius:12px;
+    border:3px solid rgba(255,80,80,0.07); color: #fff; font-size:20px; text-align:center;
+    box-shadow:0 12px 40px rgba(0,0,0,0.6);
+  }
+  #bigWarn .bigText{ font-size:22px; font-weight:800; margin-bottom:8px; color:var(--bad); }
+  #bigWarn.small{ padding:12px 18px; font-size:16px; }
+
+  /* end level overlay */
+  #overlay{
+    position:fixed; inset:0; display:none; z-index:9999;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    justify-content:center; align-items:center;
+  }
+  #endBox{
+    background:#071020; padding:28px 36px; border-radius:16px; text-align:center;
+    box-shadow:0 0 50px rgba(0,255,120,0.14);
+    color:#e6edf3; min-width:320px;
+  }
+  #endBox h2{ font-size:22px; margin:6px 0 10px; }
+  #endBox p{ color:#aee; margin:8px 0 12px; }
+
+  .btn{ padding:10px 18px; border-radius:12px; font-size:16px; cursor:pointer; border:none; margin:6px; }
+  .btn.yes{ background: #00e192; color:#022; }
+  .btn.no{ background: #ff6b6b; color:#fff; }
+
+  /* helpers */
+  .hidden{ display:none !important; }
 </style>
 </head>
 <body>
   <h1>مرحله ۱ — آزمایش عضویت</h1>
 
+  <!-- متن جذاب زیر عنوان -->
   <p id="introText" style="font-size:22px; margin-top:10px; color:#80ffd8; font-weight:bold; text-shadow:0 0 12px rgba(0,255,140,0.55);">
-    قوانین مجموعه‌ها نوشته شده‌اند… اکنون نوبت توست کارتِ قدرت را در جای حقیقی‌اش بنشانی.
+    قوانین مجموعه‌ها نوشته شده‌اند… اکنون نوبت توست کارتِ قدرت را در جای حقیقی‌اش بنشانی و تعادل عناصر را برقرار کنی.
   </p>
 
   <div id="scoreBox">امتیاز: <span id="scoreVal">0</span>
@@ -90,36 +138,80 @@
   </div>
 
   <div id="message"></div>
+  <div id="bigWarn"><div class="bigText" id="bigWarnTitle"></div><div id="bigWarnSub"></div></div>
+
+  <div id="overlay">
+    <div id="endBox">
+      <h2 id="endTitle">🎉 مرحله ۱ با موفقیت کامل شد!</h2>
+      <p id="endText">آماده‌ای برای مرحله ۲؟</p>
+      <div>
+        <button class="btn yes" id="btnNext">بزن بریم</button>
+        <button class="btn no" id="btnRetry">دوباره امتحان می‌کنم</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* ---------- data ---------- */
+/* data */
 const sets = { A: [1,3,5], B: [3,4,5], C: [2,5,6] };
 let score = 0;
 const initialTrayCount = document.querySelectorAll('#tray .card').length;
 
-/* elements */
 const scoreVal = document.getElementById('scoreVal');
 const scoreChange = document.getElementById('scoreChange');
 const tray = document.getElementById('tray');
 const boxes = document.querySelectorAll('.set-box');
 const messageEl = document.getElementById('message');
+const bigWarn = document.getElementById('bigWarn');
+const bigWarnTitle = document.getElementById('bigWarnTitle');
+const bigWarnSub = document.getElementById('bigWarnSub');
+const overlay = document.getElementById('overlay');
+const endTitle = document.getElementById('endTitle');
+const endText = document.getElementById('endText');
+const btnNext = document.getElementById('btnNext');
+const btnRetry = document.getElementById('btnRetry');
 
-/* states */
 let placedCount = 0;
 
 function updateScore(delta){
   score += delta;
   scoreVal.textContent = score;
-  scoreChange.textContent = delta>0? '+'+delta : delta;
-  scoreChange.className = 'score-change ' + (delta>0 ? 'plus show' : 'minus show');
-  setTimeout(()=> scoreChange.className='score-change', 700);
+  scoreChange.textContent = (delta>0? '+'+delta : delta);
+  scoreChange.className = 'score-change ' + (delta>0? 'plus show' : 'minus show');
+  setTimeout(()=> scoreChange.className = 'score-change', 700);
 }
 
 function setMessage(mathLine, persian){
-  messageEl.innerHTML = `<span class="math-text">${mathLine}</span>${persian}`;
+  messageEl.innerHTML = 
+    `<span class="math-text" dir="ltr">${mathLine}</span>
+     <div style="margin-top:6px">${persian}</div>`;
 }
 
-function uniqueId(){ return 'id'+Math.random().toString(36).slice(2); }
+function showBigWarn(title, sub='', duration=2000, shakeTarget=null){
+  bigWarnTitle.textContent = title;
+  bigWarnSub.textContent = sub;
+  bigWarn.style.display = 'block';
+  if(shakeTarget) {
+    shakeTarget.classList.add('shake');
+    setTimeout(()=> shakeTarget.classList.remove('shake'), 450);
+  }
+  setTimeout(()=> bigWarn.style.display = 'none', duration);
+}
+
+function uniqueId(prefix='id'){ return prefix + '-' + Date.now() + '-' + Math.floor(Math.random()*1000); }
+
+function addGreenFlash(box){
+  const fx = document.createElement('div');
+  fx.style.position='absolute';
+  fx.style.inset='0';
+  fx.style.pointerEvents='none';
+  fx.style.borderRadius='12px';
+  fx.style.boxShadow='inset 0 0 26px 8px rgba(0,255,120,0.85)';
+  fx.style.opacity='0.98';
+  box.appendChild(fx);
+  setTimeout(()=> fx.style.opacity='0', 160);
+  setTimeout(()=> fx.remove(), 420);
+}
 
 function makeTrayCardDraggable(el){
   el.addEventListener('dragstart', e=>{
@@ -127,116 +219,231 @@ function makeTrayCardDraggable(el){
     e.dataTransfer.setData('origin','tray');
     e.dataTransfer.setData('dragId', el.id);
     el.classList.add('fadeOut');
-    setTimeout(()=> el.style.visibility='hidden', 120);
+    setTimeout(()=> el.style.visibility = 'hidden', 120);
+  });
+  el.addEventListener('click', ()=> {
+    el.style.transform = 'scale(1.05)';
+    setTimeout(()=> el.style.transform = '', 160);
   });
 }
 
 function makePlacedDraggable(placedEl){
   placedEl.setAttribute('draggable','true');
-
   placedEl.addEventListener('dragstart', e=>{
     e.dataTransfer.setData('value', placedEl.dataset.value);
     e.dataTransfer.setData('origin','placed');
     e.dataTransfer.setData('dragId', placedEl.id);
+    const parentSet = placedEl.closest('.set-box')?.dataset?.set || '';
+    e.dataTransfer.setData('fromSet', parentSet);
     placedEl.classList.add('fadeOut');
-    setTimeout(()=> placedEl.style.visibility='hidden', 120);
+    setTimeout(()=> placedEl.style.visibility = 'hidden', 140);
   });
+  placedEl.addEventListener('click', ()=> returnPlacedToTray(placedEl));
 }
 
-/* tray drop: restore or ignore silently */
-tray.addEventListener('dragover', e=> e.preventDefault());
-tray.addEventListener('drop', e=>{
+function returnPlacedToTray(placedEl){
+  const val = Number(placedEl.dataset.value);
+  placedEl.remove();
+  placedCount = Math.max(0, placedCount - 1);
+  const newId = uniqueId('tray');
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = newId;
+  card.dataset.value = val;
+  card.draggable = true;
+  card.textContent = val;
+  makeTrayCardDraggable(card);
+  tray.appendChild(card);
+  setMessage(`${val} ∉ tray`, `کارت بازگشت به سینی.`);
+}
+
+boxes.forEach(box => {
+  box.addEventListener('dragover', e => e.preventDefault());
+  box.addEventListener('drop', e => {
+    e.preventDefault();
+    const value = Number(e.dataTransfer.getData('value'));
+    const origin = e.dataTransfer.getData('origin');
+    const dragId = e.dataTransfer.getData('dragId');
+    const fromSet = e.dataTransfer.getData('fromSet');
+    handleDropToSet({value, origin, dragId, fromSet}, box);
+  });
+});
+
+tray.addEventListener('dragover', e => e.preventDefault());
+tray.addEventListener('drop', e => {
   e.preventDefault();
   const origin = e.dataTransfer.getData('origin');
   const dragId = e.dataTransfer.getData('dragId');
   const value = Number(e.dataTransfer.getData('value'));
 
   if(origin === 'placed'){
+    const placedEl = document.getElementById(dragId);
+    if(placedEl){
+      placedEl.remove();
+      placedCount = Math.max(0, placedCount - 1);
+      const newId = uniqueId('tray');
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = newId;
+      card.dataset.value = value;
+      card.draggable = true;
+      card.textContent = value;
+      makeTrayCardDraggable(card);
+      tray.appendChild(card);
+      setMessage(`${value} ∉ tray`, `کارت بازگشت به سینی.`);
+    }
+  } else if(origin === 'tray'){
     const el = document.getElementById(dragId);
-    if(el){ el.remove(); }
-
-    placedCount = Math.max(0, placedCount-1);
-    const card = document.createElement('div');
-    card.className='card'; card.draggable=true;
-    card.dataset.value=value; card.textContent=value;
-    card.id = uniqueId();
-    makeTrayCardDraggable(card);
-    tray.appendChild(card);
-  }
-  else if(origin==='tray'){
-    const el = document.getElementById(dragId);
-    if(el){ el.style.visibility='visible'; el.classList.remove('fadeOut'); }
+    if(el){
+      el.style.visibility = 'visible';
+      el.classList.remove('fadeOut');
+    }
   }
 });
 
-boxes.forEach(box=>{
-  box.addEventListener('dragover', e=> e.preventDefault());
-  box.addEventListener('drop', e=>{
-    e.preventDefault();
-    const value = Number(e.dataTransfer.getData('value'));
-    const origin = e.dataTransfer.getData('origin');
-    const dragId = e.dataTransfer.getData('dragId');
-    handleDropToSet(value, origin, dragId, box);
-  });
-});
-
-function handleDropToSet(value, origin, dragId, box){
+function handleDropToSet(drag, box){
   const setName = box.dataset.set;
   const contentsEl = box.querySelector('.set-contents');
-  const existing = [...contentsEl.querySelectorAll('.placed')].map(x=> Number(x.dataset.value));
+  const existing = Array.from(contentsEl.querySelectorAll('.placed')).map(d => Number(d.dataset.value));
+  const value = Number(drag.value);
 
-  if(!sets[setName].includes(value)){
-    updateScore(-10);
-    setMessage(`${value} ∉ ${setName}`, `این عضو داخل مجموعه نیست.`);
-    const el = document.getElementById(dragId);
-    if(el){ el.style.visibility='visible'; el.classList.remove('fadeOut'); }
+  if(drag.origin === 'placed'){
+    const orig = document.getElementById(drag.dragId);
+    if(!orig){ return; }
+    const fromSet = drag.fromSet || orig.closest('.set-box')?.dataset?.set;
+
+    if(fromSet === setName){
+      orig.style.visibility = 'visible'; 
+      orig.classList.remove('fadeOut');
+      setMessage(`${value} ∈ ${setName}`, `${value} عضو مجموعهٔ ${setName} است.`);
+      return;
+    }
+    if(existing.includes(value)){
+      showBigWarn('این عدد تکراری است', `عدد ${value} قبلاً در مجموعهٔ ${setName} قرار گرفته.`, 2000, box);
+      orig.style.visibility = 'visible';
+      orig.classList.remove('fadeOut');
+      return;
+    }
+    if(!sets[setName].includes(value)){
+      showBigWarn('دقت کن! این عضو داخل این مجموعه نیست', `عدد ${value} عضو مجموعهٔ ${setName} نیست.`, 2000, box);
+      orig.style.visibility = 'visible'; 
+      orig.classList.remove('fadeOut');
+      return;
+    }
+
+    orig.remove();
+    contentsEl.appendChild(orig);
+    orig.classList.remove('fadeOut');
+    orig.classList.add('placed-anim');
+    setTimeout(()=> orig.classList.remove('placed-anim'), 420);
+    setMessage(`${value} ∈ ${setName}`, `${value} حالا عضو مجموعهٔ ${setName} است.`);
+    addGreenFlash(box);
     return;
   }
 
   if(existing.includes(value)){
+    showBigWarn('این عدد تکراری است', `عدد ${value} قبلاً در مجموعهٔ ${setName} قرار گرفته.`, 2000, box);
     updateScore(-10);
-    setMessage(`${value} تکراری است`, `این عدد قبلا داخل مجموعه گذاشته شده.`);
-    const el = document.getElementById(dragId);
-    if(el){ el.style.visibility='visible'; el.classList.remove('fadeOut'); }
+    const trayCard = document.getElementById(drag.dragId);
+    if(trayCard){ 
+      trayCard.style.visibility = 'visible';
+      trayCard.classList.remove('fadeOut'); 
+    }
     return;
   }
 
-  if(origin==='tray'){
-    const placed = document.createElement('div');
-    placed.className='placed placed-anim';
-    placed.dataset.value=value;
-    placed.textContent=value;
-    placed.id=uniqueId();
-    makePlacedDraggable(placed);
-    contentsEl.appendChild(placed);
-
-    const trayCard = document.getElementById(dragId);
-    if(trayCard) trayCard.remove();
-
-    placedCount++;
-    updateScore(+10);
-    setMessage(`${value} ∈ ${setName}`, `درست گذاشتی!`);
+  if(!sets[setName].includes(value)){
+    showBigWarn('دقت کن! این عضو داخل این مجموعه نیست', `عدد ${value} عضو مجموعهٔ ${setName} نیست.`, 2000, box);
+    updateScore(-10);
+    const trayCard = document.getElementById(drag.dragId);
+    if(trayCard){ 
+      trayCard.style.visibility = 'visible';
+      trayCard.classList.remove('fadeOut'); 
+    }
+    return;
   }
 
-  if(origin==='placed'){
-    const old = document.getElementById(dragId);
-    if(old){ old.remove(); }
+  const placed = document.createElement('div');
+  placed.className = 'placed placed-anim';
+  placed.textContent = value;
+  placed.dataset.value = value;
+  placed.id = uniqueId('placed');
 
-    const placed = document.createElement('div');
-    placed.className='placed placed-anim';
-    placed.dataset.value=value;
-    placed.textContent=value;
-    placed.id=uniqueId();
-    makePlacedDraggable(placed);
-    contentsEl.appendChild(placed);
+  makePlacedDraggable(placed);
+  contentsEl.appendChild(placed);
+  addGreenFlash(box);
 
-    setMessage(`${value} ∈ ${setName}`, `جای این عضو همین‌جاست.`);
+  const trayCard = document.getElementById(drag.dragId);
+  if(trayCard) trayCard.remove();
+
+  placedCount++;
+  updateScore(+10);
+  setMessage(`${value} ∈ ${setName}`, `${value} عضو مجموعهٔ ${setName} است؛ آفرین!`);
+
+  if(placedCount === initialTrayCount){
+    setTimeout(()=> showEndModal(), 420);
   }
 }
 
-/* init */
-document.querySelectorAll('#tray .card').forEach(makeTrayCardDraggable);
-setMessage('', '');
+function showEndModal(){
+  overlay.style.display = 'flex';
+  endTitle.textContent = '🎉 مرحله ۱ با موفقیت کامل شد!';
+  endText.textContent = 'آماده‌ای برای مرحلهٔ ۲؟';
+}
+
+btnNext.addEventListener('click', ()=> {
+  overlay.style.display = 'none';
+  setMessage('شروع مرحلهٔ ۲', 'مرحلهٔ ۲ بعداً ساخته می‌شود.');
+});
+
+btnRetry.addEventListener('click', ()=> {
+  overlay.style.display = 'none';
+  resetStage();
+});
+
+function resetStage(){
+  document.querySelectorAll('.placed').forEach(el=> el.remove());
+  tray.innerHTML = '';
+  const initialValues = [1,2,3,3,4,5,5,5,6];
+  initialValues.forEach((v,i)=>{
+    const id = 'tray-' + (i+1);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = id;
+    card.dataset.value = v;
+    card.draggable = true;
+    card.textContent = v;
+    makeTrayCardDraggable(card);
+    tray.appendChild(card);
+  });
+  placedCount = 0;
+  score = 0;
+  scoreVal.textContent = score;
+  setMessage('', '');
+});
+
+document.querySelectorAll('#tray .card').forEach(el => makeTrayCardDraggable(el));
+
+document.addEventListener('dragend', e=>{
+  try{
+    const dragId = e.dataTransfer.getData('dragId');
+    const el = document.getElementById(dragId);
+    if(el && el.classList.contains('fadeOut')){
+      el.style.visibility = 'visible';
+      el.classList.remove('fadeOut');
+    }
+  }catch{}
+});
+
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){ overlay.style.display = 'none'; }
+});
+
+/* ✔ متن ابتدایی جدید */
+setMessage(
+  'هدف: قرار دادن اعضای درست در مجموعه‌ها',
+  'هر کارت را بکش و روی مجموعه مناسب رها کن.'
+);
 </script>
 </body>
-</html><!-- لطفاً کد کامل قبلی‌ات را اینجا بفرست تا اصلاحش کنم. -->
+</html>
