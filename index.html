@@ -177,6 +177,10 @@ const btnRetry = document.getElementById('btnRetry');
 /* state */
 let placedCount = 0; // current number of placed cards across sets
 
+/* --- new globals to track the item being dragged robustly --- */
+let lastDragId = null;
+let lastDragOrigin = null; // 'tray' or 'placed'
+
 /* helpers */
 function updateScore(delta){
   score += delta;
@@ -220,6 +224,9 @@ function makeTrayCardDraggable(el){
     e.dataTransfer.setData('value', el.dataset.value);
     e.dataTransfer.setData('origin','tray');
     e.dataTransfer.setData('dragId', el.id);
+    // track globally (more reliable than depending on dataTransfer in dragend)
+    lastDragId = el.id;
+    lastDragOrigin = 'tray';
     // hide visually but keep in DOM (we may remove later)
     el.classList.add('fadeOut');
     setTimeout(()=> el.style.visibility = 'hidden', 120);
@@ -243,6 +250,11 @@ function makePlacedDraggable(placedEl){
     // record original parent id for revert
     const parentSet = placedEl.closest('.set-box')?.dataset?.set || '';
     e.dataTransfer.setData('fromSet', parentSet);
+    // ALSO store on element so dragend can find it reliably
+    placedEl.dataset.origSet = parentSet;
+    // track globally
+    lastDragId = placedEl.id;
+    lastDragOrigin = 'placed';
     // hide while dragging
     placedEl.classList.add('fadeOut');
     setTimeout(()=> placedEl.style.visibility = 'hidden', 140);
@@ -286,6 +298,9 @@ boxes.forEach(box => {
     const dragId = e.dataTransfer.getData('dragId');
     const fromSet = e.dataTransfer.getData('fromSet'); // if placed
     handleDropToSet({value, origin, dragId, fromSet}, box);
+    // clear last drag tracking because drop handled
+    lastDragId = null;
+    lastDragOrigin = null;
   });
 });
 
@@ -319,8 +334,12 @@ tray.addEventListener('drop', e => {
     const el = document.getElementById(dragId);
     if(el){ el.style.visibility = 'visible'; el.classList.remove('fadeOut'); }
   }
+  // clear last drag tracking
+  lastDragId = null;
+  lastDragOrigin = null;
 });
 
+/* handle drop into a set box */
 function handleDropToSet(drag, box){
   const setName = box.dataset.set;
   const contentsEl = box.querySelector('.set-contents');
@@ -457,19 +476,42 @@ function resetStage(){
 /* create initial draggable behaviour for existing tray cards */
 document.querySelectorAll('#tray .card').forEach(el => makeTrayCardDraggable(el));
 
-/* safety: if user cancels drop (dragend), restore hidden tray card visibility */
+/* safety: if user cancels drop (dragend), restore hidden tray card visibility
+   and restore placed cards back to their original set if drag was cancelled.
+   We rely on lastDragId/lastDragOrigin tracked at dragstart to be robust. */
 document.addEventListener('dragend', e=>{
   try{
-    const dragId = e.dataTransfer?.getData?.('dragId') || null;
-    if(dragId){
-      const el = document.getElementById(dragId);
-      if(el && el.classList.contains('fadeOut')){
+    const dragId = lastDragId;
+    const origin = lastDragOrigin;
+    if(!dragId) return;
+    const el = document.getElementById(dragId);
+    if(!el){
+      // element removed (probably successfully dropped & removed from tray) -> nothing to restore
+      lastDragId = null;
+      lastDragOrigin = null;
+      return;
+    }
+
+    // if element still exists but is hidden by fadeOut (user cancelled drop)
+    if(el.classList.contains('fadeOut') || el.style.visibility === 'hidden'){
+      if(origin === 'tray'){
+        // restore tray card visibility
+        el.style.visibility = 'visible';
+        el.classList.remove('fadeOut');
+      } else if(origin === 'placed'){
+        // restore placed card back into its original set
+        const origSet = el.dataset.origSet || '';
+        const target = document.querySelector(`.set-box[data-set="${origSet}"] .set-contents`);
+        if(target) target.appendChild(el);
         el.style.visibility = 'visible';
         el.classList.remove('fadeOut');
       }
     }
   }catch(err){
-    // some browsers clear dataTransfer on dragend; ignore
+    // ignore: some browsers clear dataTransfer on dragend; but we use lastDragId to be robust
+  } finally {
+    lastDragId = null;
+    lastDragOrigin = null;
   }
 });
 
